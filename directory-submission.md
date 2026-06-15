@@ -54,7 +54,7 @@ Wasilah brings the core of an Islamic prayer companion into Claude. Ask for accu
 - **Read-only.** No tool has side effects. Nothing is created, modified, or deleted.
 - **Stateless.** No sessions, no database, no logs of user input. Each request is independent.
 - **No personal data.** No accounts, no location history, no tracking. The on-device prayer tracker in the Wasilah app is deliberately out of scope.
-- **External calls:** city names are resolved through the Open-Meteo geocoding API (no key, anonymous). Quran audio links point to the islamic.network CDN. Passing coordinates directly avoids any external call.
+- **External calls:** none. City names are resolved against a bundled offline database (a subset of GeoNames, CC BY 4.0). Prayer times, Qibla, and Hijri date are computed on the server. The server fully owns and controls every endpoint it touches (only itself). Quran audio links point to the islamic.network CDN, which the client fetches if opened; the server does not contact it.
 - **Hosting:** Cloudflare Workers. Source: https://github.com/mumullickm/wasilah-mcp (public).
 - **Calculation provenance:** prayer-time geometry is ported from the Wasilah app's own engine (PrayTimes.org canonical algorithm, cross-verified against Adhan), so the connector and the app agree.
 

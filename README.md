@@ -14,7 +14,7 @@ Prayer times are computed with the **same astronomy engine as the Wasilah app** 
 | `get_hijri_date` | Islamic date for a given Gregorian date (Umm al-Qura, with a tabular fallback). |
 | `get_quran_audio` | A streaming full-surah recitation URL plus surah name and ayah count. |
 
-Every location tool accepts either a `city` name (resolved via the free Open-Meteo geocoding API) or explicit `latitude` + `longitude` + `timezone`. Prayer tools also accept `method` (Karachi, ISNA, MWL, Umm al-Qura, and others) and `asr` (`auto`, `shafii`, `hanafi`).
+Every location tool accepts either a `city` name (resolved against a bundled offline database) or explicit `latitude` + `longitude` + `timezone`. Prayer tools also accept `method` (Karachi, ISNA, MWL, Umm al-Qura, and others) and `asr` (`auto`, `shafii`, `hanafi`). The connector makes no external network calls.
 
 ## Run locally
 
@@ -48,5 +48,5 @@ This server is authless and stateless. It exposes only public reference data; it
 
 - **Prayer parity.** Calculation-method angles, the Asr shadow factors, and the solar geometry mirror the app exactly. The app's default is Karachi method with Hanafi Asr.
 - **Hijri source.** Uses the Umm al-Qura calendar where the runtime's ICU supports it, and a tabular calculation otherwise. A tabular date can differ from a moon-sighting announcement by a day.
-- **Geocoding.** City lookups depend on Open-Meteo at request time. Passing coordinates directly avoids the network call and is exact.
+- **Fully offline.** The connector makes no external API calls. City lookups use a bundled offline database (a subset of GeoNames, CC BY 4.0: top cities per country plus every capital); prayer times, Qibla, and Hijri date are computed on the server. Pass coordinates directly for places not in the database.
 - **Personal data is out of scope.** This server does not touch the on-device Salah tracker. Exposing per-user history would require a Wasilah backend with accounts and OAuth.
