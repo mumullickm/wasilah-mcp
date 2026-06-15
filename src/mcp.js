@@ -24,6 +24,7 @@ const LOCATION_PROPS = {
 export const TOOLS = [
   {
     name: 'get_prayer_times',
+    annotations: { title: 'Prayer times', readOnlyHint: true, openWorldHint: true },
     description:
       'Get the five daily prayer times plus sunrise for a city or coordinates, computed with the same engine as the Wasilah app. On Fridays, Dhuhr is marked as Jumu’ah.',
     inputSchema: {
@@ -50,6 +51,7 @@ export const TOOLS = [
   },
   {
     name: 'get_next_prayer',
+    annotations: { title: 'Next prayer', readOnlyHint: true, openWorldHint: true },
     description:
       'Get the next upcoming prayer and how long until it begins, for a city or coordinates.',
     inputSchema: {
@@ -63,11 +65,13 @@ export const TOOLS = [
   },
   {
     name: 'get_qibla',
+    annotations: { title: 'Qibla direction', readOnlyHint: true, openWorldHint: true },
     description: 'Get the Qibla direction (compass bearing to the Kaaba) for a city or coordinates.',
     inputSchema: { type: 'object', properties: { ...LOCATION_PROPS } },
   },
   {
     name: 'get_hijri_date',
+    annotations: { title: 'Hijri date', readOnlyHint: true, openWorldHint: false },
     description: 'Get the Islamic (Hijri) date for a given Gregorian date, or today.',
     inputSchema: {
       type: 'object',
@@ -78,6 +82,7 @@ export const TOOLS = [
   },
   {
     name: 'get_quran_audio',
+    annotations: { title: 'Quran audio', readOnlyHint: true, openWorldHint: false },
     description:
       'Get a streaming audio URL for full-surah Quran recitation, plus the surah name and ayah count.',
     inputSchema: {
