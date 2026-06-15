@@ -190,7 +190,7 @@ const PRIVACY = [
   'The Wasilah connector does not collect, store, or share any personal information. There are no accounts, no sign-in, no tracking, and no logs of your questions.',
   'It is stateless. Every request is handled independently and nothing is retained after it is answered.',
   'It exposes only public reference data: prayer times, Qibla direction, the Hijri date, and Quran recitation links. It has no access to your device, your location history, your files, or the on-device data inside the Wasilah app.',
-  'The only outbound call happens when you ask about a city by name: that city name is sent to the Open-Meteo geocoding service to look up coordinates and a timezone. Passing coordinates directly avoids this call entirely. Quran audio links point to the islamic.network content delivery network.',
+  'The connector makes no outbound network calls of its own. City lookups use a bundled offline database, and prayer times, Qibla, and the Hijri date are computed on the server. Quran audio links point to the islamic.network content delivery network, which only your own client fetches if you open them; the connector itself never contacts it.',
   'Questions: mumullickm@gmail.com. The Wasilah app has its own privacy policy at <a href="https://wasilah.site/privacy/">wasilah.site/privacy</a>.',
 ];
 
