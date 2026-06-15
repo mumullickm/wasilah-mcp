@@ -236,6 +236,30 @@ export default {
       });
     }
 
+    if (url.pathname === '/google448255bfbea3c4ca.html') {
+      return new Response(
+        'google-site-verification: google448255bfbea3c4ca.html',
+        { headers: { 'Content-Type': 'text/html; charset=utf-8', ...CORS } }
+      );
+    }
+
+    if (url.pathname === '/sitemap.xml') {
+      const urls = ['/', '/privacy', '/terms']
+        .map((p) => `  <url><loc>https://wasilah-mcp.aykiz.workers.dev${p}</loc></url>`)
+        .join('\n');
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>`;
+      return new Response(xml, {
+        headers: { 'Content-Type': 'application/xml; charset=utf-8', ...CORS },
+      });
+    }
+
+    if (url.pathname === '/robots.txt') {
+      return new Response(
+        'User-agent: *\nAllow: /\nSitemap: https://wasilah-mcp.aykiz.workers.dev/sitemap.xml\n',
+        { headers: { 'Content-Type': 'text/plain; charset=utf-8', ...CORS } }
+      );
+    }
+
     if (url.pathname === '/health') {
       return json({ status: 'ok', server: SERVER_INFO });
     }
