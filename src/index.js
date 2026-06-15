@@ -1,5 +1,6 @@
 import { TOOLS, callTool } from './mcp.js';
 import { FAVICON_PNG_BASE64 } from './favicon.js';
+import { LOGO_SVG } from './logo.js';
 
 const SERVER_INFO = { name: 'wasilah', title: 'Wasilah', version: '0.1.0' };
 const PROTOCOL_VERSION = '2025-06-18';
@@ -219,6 +220,16 @@ export default {
       return new Response(bytes, {
         headers: {
           'Content-Type': 'image/png',
+          'Cache-Control': 'public, max-age=86400',
+          ...CORS,
+        },
+      });
+    }
+
+    if (url.pathname === '/logo.svg') {
+      return new Response(LOGO_SVG, {
+        headers: {
+          'Content-Type': 'image/svg+xml',
           'Cache-Control': 'public, max-age=86400',
           ...CORS,
         },
