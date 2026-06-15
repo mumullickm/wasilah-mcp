@@ -1,6 +1,7 @@
 import { TOOLS, callTool } from './mcp.js';
+import { FAVICON_PNG_BASE64 } from './favicon.js';
 
-const SERVER_INFO = { name: 'wasilah', version: '0.1.0' };
+const SERVER_INFO = { name: 'wasilah', title: 'Wasilah', version: '0.1.0' };
 const PROTOCOL_VERSION = '2025-06-18';
 
 const CORS = {
@@ -100,6 +101,7 @@ function landingPage(origin) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Wasilah Connector</title>
+<link rel="icon" type="image/png" href="/favicon.png">
 <style>
   :root { --emerald:#004B49; --emerald-dark:#00302F; --gold:#F1D592; --cream:#F4F0E0; }
   * { box-sizing: border-box; }
@@ -159,6 +161,7 @@ function legalPage(title, paragraphs) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Wasilah Connector - ${title}</title>
+<link rel="icon" type="image/png" href="/favicon.png">
 <style>
   :root { --emerald:#004B49; --emerald-dark:#00302F; --gold:#F1D592; --cream:#F4F0E0; }
   body { margin:0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -209,6 +212,17 @@ export default {
       if (request.method === 'POST') return handleMcpPost(request);
       // The Streamable HTTP GET stream is optional; this server is stateless.
       return new Response('Method Not Allowed', { status: 405, headers: CORS });
+    }
+
+    if (url.pathname === '/favicon.ico' || url.pathname === '/favicon.png') {
+      const bytes = Uint8Array.from(atob(FAVICON_PNG_BASE64), (c) => c.charCodeAt(0));
+      return new Response(bytes, {
+        headers: {
+          'Content-Type': 'image/png',
+          'Cache-Control': 'public, max-age=86400',
+          ...CORS,
+        },
+      });
     }
 
     if (url.pathname === '/health') {
