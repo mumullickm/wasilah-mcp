@@ -1,0 +1,17 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mumullickm/wasilah-mcp",
+  "title": "Wasilah",
+  "description": "Prayer times, Qibla direction, Hijri date and Quran audio. Authless, stateless, public data only.",
+  "repository": {
+    "url": "https://github.com/mumullickm/wasilah-mcp",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://wasilah-mcp.aykiz.workers.dev/mcp"
+    }
+  ]
+}
