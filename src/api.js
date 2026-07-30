@@ -68,6 +68,7 @@ async function resolveLocation(q, request) {
       latitude: Number(lat),
       longitude: Number(lon),
       timezone: q.get('timezone') || q.get('tz') || 'UTC',
+      tzAssumed: !(q.get('timezone') || q.get('tz')),
     };
   }
   const city = q.get('city');
@@ -181,6 +182,7 @@ async function handleApiInner(url, request) {
       const pt = prayerTimes(loc, q);
       return json({
         attribution: GEONAMES_ATTRIBUTION,
+        ...(loc.tzAssumed ? { warning: 'No `timezone` was supplied with these coordinates. Times are UTC and are almost certainly wrong for this location. Pass an IANA zone such as Asia/Dhaka.' } : {}),
         location: { name: loc.name, country: loc.country, latitude: loc.latitude, longitude: loc.longitude, timezone: loc.timezone },
         date: pt.date,
         method: pt.method,
@@ -217,6 +219,7 @@ async function handleApiInner(url, request) {
       }
       return json({
         attribution: GEONAMES_ATTRIBUTION,
+        ...(loc.tzAssumed ? { warning: 'No `timezone` was supplied with these coordinates. Times are UTC and are almost certainly wrong for this location. Pass an IANA zone such as Asia/Dhaka.' } : {}),
         location: { name: loc.name, country: loc.country, timezone: loc.timezone },
         next: next.name,
         time: hhmm(next.clock),
@@ -230,6 +233,7 @@ async function handleApiInner(url, request) {
       const { bearing, compass } = qiblaBearing(loc.latitude, loc.longitude);
       return json({
         attribution: GEONAMES_ATTRIBUTION,
+        ...(loc.tzAssumed ? { warning: 'No `timezone` was supplied with these coordinates. Times are UTC and are almost certainly wrong for this location. Pass an IANA zone such as Asia/Dhaka.' } : {}),
         location: { name: loc.name, country: loc.country, latitude: loc.latitude, longitude: loc.longitude },
         bearing,
         compass,

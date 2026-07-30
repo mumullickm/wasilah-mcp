@@ -144,6 +144,7 @@ async function resolveLocation(args) {
       latitude: Number(args.latitude),
       longitude: Number(args.longitude),
       timezone: args.timezone || 'UTC',
+      tzAssumed: !args.timezone,
     };
   }
   if (args.city) return geocodeCity(args.city);
@@ -193,11 +194,14 @@ async function callPrayerTimes(args) {
 
   const header = `Prayer times for ${placeLabel(loc) || loc.name} on ${dateStr}`;
   const meta = `Method: ${result.methodLabel} · Asr: ${result.asrLabel} · Timezone: ${loc.timezone} (UTC${result.tzOffsetHours >= 0 ? '+' : ''}${result.tzOffsetHours})`;
+  const tzWarning = loc.tzAssumed
+    ? '\n\nWARNING: no `timezone` was given with these coordinates, so times are UTC and are almost certainly wrong for this location. Pass an IANA zone such as Asia/Dhaka.'
+    : '';
   const fridayNote = isFriday
     ? '\nFriday: the congregation prays Jumu’ah in place of Dhuhr.'
     : '';
 
-  return `${header}\n${meta}\n\n${lines.join('\n')}${fridayNote}`;
+  return `${header}\n${meta}${tzWarning}\n\n${lines.join('\n')}${fridayNote}`;
 }
 
 async function callNextPrayer(args) {

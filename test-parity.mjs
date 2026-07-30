@@ -61,6 +61,16 @@ await test('unknown timezone fails cleanly and names the offending zone', async 
   assert.doesNotMatch(text, /\bat .*\.js:\d+/, 'a stack trace leaked to the caller');
 });
 
+await test('coordinates without a timezone warn loudly instead of silently returning UTC', async () => {
+  const r = await call('get_prayer_times', { latitude: 23.8103, longitude: 90.4125 });
+  assert.match(r.content[0].text, /WARNING/, 'a silent 6-hour error is the worst failure mode here');
+});
+
+await test('coordinates with a timezone do not warn', async () => {
+  const r = await call('get_prayer_times', { ...DHAKA, date: '2026-07-30' });
+  assert.doesNotMatch(r.content[0].text, /WARNING/, 'false alarm on a correct call');
+});
+
 console.log('\nAttribution (CC BY 4.0 compliance for the bundled GeoNames data)');
 
 await test('/api index serves the GeoNames attribution', async () => {
