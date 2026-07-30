@@ -71,6 +71,18 @@ await test('coordinates with a timezone do not warn', async () => {
   assert.doesNotMatch(r.content[0].text, /WARNING/, 'false alarm on a correct call');
 });
 
+await test('serverInfo version matches server.json and the MCP registry', async () => {
+  const { readFileSync } = await import('node:fs');
+  const declared = JSON.parse(readFileSync('./server.json', 'utf8')).version;
+  const res = await worker.fetch(new Request('http://localhost/mcp', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize',
+      params: { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 't', version: '1' } } }),
+  }));
+  const live = (await res.json()).result.serverInfo.version;
+  assert.equal(live, declared, `registry says ${declared}, server reports ${live}`);
+});
+
 console.log('\nAttribution (CC BY 4.0 compliance for the bundled GeoNames data)');
 
 await test('/api index serves the GeoNames attribution', async () => {
