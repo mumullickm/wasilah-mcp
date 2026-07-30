@@ -83,6 +83,11 @@ await test('serverInfo version matches server.json and the MCP registry', async 
   assert.equal(live, declared, `registry says ${declared}, server reports ${live}`);
 });
 
+await test('get_next_prayer also warns on coordinates without a timezone', async () => {
+  const r = await call('get_next_prayer', { latitude: 23.8103, longitude: 90.4125 });
+  assert.match(r.content[0].text, /WARNING/, 'a wrong countdown is worse than a wrong table');
+});
+
 console.log('\nAttribution (CC BY 4.0 compliance for the bundled GeoNames data)');
 
 await test('/api index serves the GeoNames attribution', async () => {

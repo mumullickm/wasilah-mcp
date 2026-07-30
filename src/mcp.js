@@ -194,15 +194,16 @@ async function callPrayerTimes(args) {
 
   const header = `Prayer times for ${placeLabel(loc) || loc.name} on ${dateStr}`;
   const meta = `Method: ${result.methodLabel} · Asr: ${result.asrLabel} · Timezone: ${loc.timezone} (UTC${result.tzOffsetHours >= 0 ? '+' : ''}${result.tzOffsetHours})`;
-  const tzWarning = loc.tzAssumed
-    ? '\n\nWARNING: no `timezone` was given with these coordinates, so times are UTC and are almost certainly wrong for this location. Pass an IANA zone such as Asia/Dhaka.'
-    : '';
+  const tzWarning = loc.tzAssumed ? TZ_WARNING : '';
   const fridayNote = isFriday
     ? '\nFriday: the congregation prays Jumu’ah in place of Dhuhr.'
     : '';
 
   return `${header}\n${meta}${tzWarning}\n\n${lines.join('\n')}${fridayNote}`;
 }
+
+const TZ_WARNING =
+  '\n\nWARNING: no `timezone` was given with these coordinates, so times are UTC and are almost certainly wrong for this location. Pass an IANA zone such as Asia/Dhaka.';
 
 async function callNextPrayer(args) {
   const loc = await resolveLocation(args);
@@ -241,7 +242,7 @@ async function callNextPrayer(args) {
     until = 1440 - now.minutesOfDay + next.clock.minutesOfDay;
   }
 
-  return `Next prayer in ${placeLabel(loc) || loc.name}: ${next.name} at ${formatClock(next.clock)}, in ${minutesToText(until)} (method ${today.methodLabel}).`;
+  return `Next prayer in ${placeLabel(loc) || loc.name}: ${next.name} at ${formatClock(next.clock)}, in ${minutesToText(until)} (method ${today.methodLabel}).${loc.tzAssumed ? TZ_WARNING : ''}`;
 }
 
 async function callQibla(args) {
