@@ -1,5 +1,6 @@
 import { computePrayerTimes, formatClock, METHOD_LABELS } from './prayer.js';
 import { qiblaBearing } from './qibla.js';
+import { IFB_OFFSETS } from './ifb.js';
 import { ASMA_UL_HUSNA } from './names.js';
 import { hijriMonth, HIJRI_METHODS, HIJRI_MONTHS } from './hijri.js';
 import { significanceFor } from './significance.js';
@@ -80,6 +81,18 @@ export const TOOLS = [
       type: 'object',
       properties: {
         date: { type: 'string', description: 'Gregorian date as YYYY-MM-DD. Defaults to today (UTC).' },
+      },
+    },
+  },
+  {
+    name: 'get_ifb_district_offset',
+    annotations: { title: 'IFB district offset (Bangladesh)', readOnlyHint: true, openWorldHint: false },
+    description:
+      'Get the Islamic Foundation Bangladesh published time offset from Dhaka for a Bangladeshi district, for sehri end and iftar. Omit the district to list all 64. These are IFB\'s own published values, not a computation.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        district: { type: 'string', description: 'District name in English or Bengali, e.g. Sylhet or সিলেট.' },
       },
     },
   },
@@ -319,6 +332,36 @@ function callQuranAudio(args) {
   return lines.join('\n');
 }
 
+function callIfbOffset(args) {
+  const all = IFB_OFFSETS.districts;
+  const head = `${IFB_OFFSETS.source}\n${IFB_OFFSETS.document}\nPublished for sehri end and iftar. Base: Dhaka = 0. Source document last updated ${IFB_OFFSETS.documentUpdated}.`;
+  const caveat =
+    '\nIFB adds margins on purpose: roughly 3 minutes to sehri end, and iftar is set after true sunset, so IFB times are more conservative than raw astronomy.' +
+    '\nIFB\'s own footnote warns that in the northern districts the Asr offset may need to be LARGER than these values. Do not apply these to Asr in the north.' +
+    '\nThis is a transcription, not an official IFB publication. Where they differ, IFB is correct.';
+
+  if (!args.district) {
+    const rows = all.map((d) => `  ${d.en.padEnd(18)} ${d.bn.padEnd(14)} ${d.division.padEnd(11)} sehri ${d.sehri >= 0 ? '+' : ''}${d.sehri}  iftar ${d.iftar >= 0 ? '+' : ''}${d.iftar}`);
+    const un = IFB_OFFSETS.unresolved.map((d) => `  ${d.en.padEnd(18)} ${d.bn.padEnd(14)} ${d.division.padEnd(11)} NOT PUBLISHED by IFB${d.estimate != null ? ` (astronomical estimate ${d.estimate >= 0 ? '+' : ''}${d.estimate}, evidence only)` : ''}`);
+    return `${head}\n\n${rows.join('\n')}\n${un.join('\n')}\n${caveat}`;
+  }
+
+  const q = String(args.district).trim().toLowerCase();
+  const hit = all.find((d) => d.en.toLowerCase() === q || d.bn === String(args.district).trim())
+    || all.find((d) => d.en.toLowerCase().includes(q));
+  if (hit) {
+    const mins = (n) => `${n >= 0 ? '+' : ''}${n} minute${Math.abs(n) === 1 ? '' : 's'}`;
+    return `${hit.en} (${hit.bn}), ${hit.division} division\n  sehri end: ${mins(hit.sehri)} from Dhaka\n  iftar:     ${mins(hit.iftar)} from Dhaka\n\n${head}${caveat}`;
+  }
+  const miss = IFB_OFFSETS.unresolved.find((d) => d.en.toLowerCase() === q || d.bn === String(args.district).trim());
+  if (miss) {
+    return `${miss.en} (${miss.bn}), ${miss.division} division\n  NOT PUBLISHED in the IFB offset table.\n` +
+      (miss.estimate != null ? `  An astronomical computation gives ${miss.estimate >= 0 ? '+' : ''}${miss.estimate} minutes, consistent with its neighbours. Evidence only, not IFB's value.\n` : '') +
+      `\n${head}${caveat}`;
+  }
+  throw new Error(`No Bangladeshi district matched "${args.district}". Call this tool with no argument to list all 64.`);
+}
+
 function callHijriCalendar(args) {
   const method = args.method || 'umm_al_qura';
   if (!HIJRI_METHODS.includes(method)) throw new Error(`\`method\` must be one of: ${HIJRI_METHODS.join(', ')}.`);
@@ -408,6 +451,8 @@ export async function callTool(name, args = {}) {
       return callHijri(args);
     case 'get_quran_audio':
       return callQuranAudio(args);
+    case 'get_ifb_district_offset':
+      return callIfbOffset(args);
     case 'get_hijri_calendar':
       return callHijriCalendar(args);
     case 'get_asma_ul_husna':

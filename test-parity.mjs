@@ -167,6 +167,31 @@ await test('Bengali significant-day notes are available', async () => {
   assert.match(t, /\u099a\u09be\u0981\u09a6/, 'Bengali sighting deferral missing');
 });
 
+console.log('\nIFB district offsets');
+
+await test('returns IFB published values, not a computation', async () => {
+  const t = (await call('get_ifb_district_offset', { district: 'Sylhet' })).content[0].text;
+  assert.match(t, /-6 minutes/);
+  assert.match(t, /Islamic Foundation Bangladesh/);
+});
+
+await test('Bengali district names work', async () => {
+  const t = (await call('get_ifb_district_offset', { district: '\u09b8\u09bf\u09b2\u09c7\u099f' })).content[0].text;
+  assert.match(t, /Sylhet/);
+});
+
+await test('Joypurhat is reported as not published, estimate marked evidence only', async () => {
+  const t = (await call('get_ifb_district_offset', { district: 'Joypurhat' })).content[0].text;
+  assert.match(t, /NOT PUBLISHED/);
+  assert.match(t, /Evidence only/i, 'the estimate must never read as IFB\'s value');
+});
+
+await test('every response carries the northern-Asr and margin caveats', async () => {
+  const t = (await call('get_ifb_district_offset', { district: 'Panchagarh' })).content[0].text;
+  assert.match(t, /Asr offset may need to be LARGER/);
+  assert.match(t, /IFB is correct/);
+});
+
 console.log('\nAttribution (CC BY 4.0 compliance for the bundled GeoNames data)');
 
 await test('/api index serves the GeoNames attribution', async () => {
