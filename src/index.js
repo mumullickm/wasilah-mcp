@@ -1,6 +1,8 @@
 import { TOOLS, callTool } from './mcp.js';
 import { FAVICON_PNG_BASE64 } from './favicon.js';
 import { LOGO_SVG } from './logo.js';
+import { handleApi } from './api.js';
+import { renderEmbed } from './embed.js';
 
 const SERVER_INFO = { name: 'wasilah', title: 'Wasilah', version: '0.1.0' };
 const PROTOCOL_VERSION = '2025-06-18';
@@ -258,6 +260,20 @@ export default {
         'User-agent: *\nAllow: /\nSitemap: https://wasilah-mcp.aykiz.workers.dev/sitemap.xml\n',
         { headers: { 'Content-Type': 'text/plain; charset=utf-8', ...CORS } }
       );
+    }
+
+    if (url.pathname === '/api' || url.pathname.startsWith('/api/')) {
+      return handleApi(url, request);
+    }
+
+    if (url.pathname === '/embed' && request.method === 'GET') {
+      return new Response(renderEmbed(url), {
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': 'public, max-age=300',
+          ...CORS,
+        },
+      });
     }
 
     if (url.pathname === '/health') {
