@@ -138,6 +138,35 @@ await test('out-of-range number fails cleanly', async () => {
   assert.match(r.content[0].text, /between 1 and 99/);
 });
 
+console.log('\nHijri calendar');
+
+await test('returns a full month mapped to Gregorian dates', async () => {
+  const r = await call('get_hijri_calendar', { year: 1448, month: 10 });
+  const t = r.content[0].text;
+  assert.match(t, /Shawwal 1448 AH \(\d+ days\)/);
+  assert.equal((t.match(/^\s*\d+\s+\d{4}-\d{2}-\d{2}/gm) || []).length >= 29, true, 'month grid too short');
+});
+
+await test('never asserts Eid as settled, and defers to local sighting', async () => {
+  const t = (await call('get_hijri_calendar', { year: 1448, month: 10 })).content[0].text;
+  assert.match(t, /EXPECTED/, 'significant days must be labelled expected');
+  assert.match(t, /local moon-sighting authority/, 'must defer to the local authority');
+});
+
+await test('calendar method is a parameter, and the two disagree', async () => {
+  const u = (await call('get_hijri_calendar', { year: 1448, month: 10, method: 'umm_al_qura' })).content[0].text;
+  const b = (await call('get_hijri_calendar', { year: 1448, month: 10, method: 'tabular' })).content[0].text;
+  assert.match(u, /2027-03-09/, 'Umm al-Qura puts 1 Shawwal 1448 on 2027-03-09');
+  assert.match(b, /2027-03-10/, 'tabular puts it a day later');
+  assert.notEqual(u, b, 'method had no effect');
+});
+
+await test('Bengali significant-day notes are available', async () => {
+  const t = (await call('get_hijri_calendar', { year: 1448, month: 9, language: 'bn' })).content[0].text;
+  assert.match(t, /\u09b0\u09ae\u099c\u09be\u09a8/, 'Bengali title missing');
+  assert.match(t, /\u099a\u09be\u0981\u09a6/, 'Bengali sighting deferral missing');
+});
+
 console.log('\nAttribution (CC BY 4.0 compliance for the bundled GeoNames data)');
 
 await test('/api index serves the GeoNames attribution', async () => {

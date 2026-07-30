@@ -1,6 +1,8 @@
 import { computePrayerTimes, formatClock, METHOD_LABELS } from './prayer.js';
 import { qiblaBearing } from './qibla.js';
 import { ASMA_UL_HUSNA } from './names.js';
+import { hijriMonth, HIJRI_METHODS, HIJRI_MONTHS } from './hijri.js';
+import { significanceFor } from './significance.js';
 import { hijriDate } from './hijri.js';
 import { geocodeCity } from './geocode.js';
 import { quranAudio, RECITERS } from './quran.js';
@@ -78,6 +80,22 @@ export const TOOLS = [
       type: 'object',
       properties: {
         date: { type: 'string', description: 'Gregorian date as YYYY-MM-DD. Defaults to today (UTC).' },
+      },
+    },
+  },
+  {
+    name: 'get_hijri_calendar',
+    annotations: { title: 'Hijri month calendar', readOnlyHint: true, openWorldHint: false },
+    description:
+      'Get a full Hijri month mapped to Gregorian dates, with the significant days that fall in it. Give a Hijri year and month, or a Gregorian date to get the month containing it. Dates are calendar positions, not sighting announcements.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        year: { type: 'integer', description: 'Hijri year, e.g. 1448.' },
+        month: { type: 'integer', minimum: 1, maximum: 12, description: 'Hijri month number, 1 = Muharram.' },
+        date: { type: 'string', description: 'Gregorian date YYYY-MM-DD; returns the Hijri month containing it. Defaults to today.' },
+        method: { type: 'string', enum: HIJRI_METHODS, description: 'umm_al_qura (default, the Saudi civil calendar) or tabular (Kuwaiti arithmetic).' },
+        language: { type: 'string', enum: ['en', 'bn'], description: 'Language for significant-day notes. Defaults to en.' },
       },
     },
   },
@@ -301,6 +319,63 @@ function callQuranAudio(args) {
   return lines.join('\n');
 }
 
+function callHijriCalendar(args) {
+  const method = args.method || 'umm_al_qura';
+  if (!HIJRI_METHODS.includes(method)) throw new Error(`\`method\` must be one of: ${HIJRI_METHODS.join(', ')}.`);
+  const bn = args.language === 'bn';
+
+  let hy = args.year;
+  let hm = args.month;
+  if (hy == null || hm == null) {
+    const n = new Date();
+    const g = args.date ? parseDate(args.date) : { year: n.getUTCFullYear(), month: n.getUTCMonth() + 1, day: n.getUTCDate() };
+    const h = hijriDate(g.year, g.month, g.day, method);
+    hy = hy ?? h.year;
+    hm = hm ?? h.monthNumber;
+  }
+  if (!Number.isInteger(hy) || !Number.isInteger(hm) || hm < 1 || hm > 12)
+    throw new Error('Provide a Hijri `year` and a `month` between 1 and 12, or a Gregorian `date`.');
+
+  const m = hijriMonth(hy, hm, method);
+  if (!m.days.length) throw new Error(`Could not build ${HIJRI_MONTHS[hm - 1]} ${hy} AH. Check the year.`);
+
+  const iso = (g) => `${g.year}-${String(g.month).padStart(2, '0')}-${String(g.day).padStart(2, '0')}`;
+  const first = m.days[0], last = m.days[m.days.length - 1];
+  const lines = [
+    `${m.monthName} ${hy} AH (${m.length} days), ${method === 'tabular' ? 'Kuwaiti tabular' : 'Umm al-Qura'} calendar`,
+    `${iso(first.gregorian)} to ${iso(last.gregorian)}`,
+    '',
+  ];
+
+  const marked = [];
+  for (const d of m.days) {
+    const sig = significanceFor(hm, d.hijriDay);
+    if (sig && !marked.some((x) => x.key === sig.key)) marked.push({ ...sig, day: d.hijriDay, gregorian: d.gregorian });
+  }
+  if (marked.length) {
+    lines.push('Significant days EXPECTED this month:');
+    for (const sig of marked) {
+      lines.push(`  ${sig.day} ${m.monthName} = ${iso(sig.gregorian)}  ${bn ? sig.titleBn : sig.title} (${sig.arabic})`);
+      lines.push(`    ${bn ? sig.noteBn : sig.note}`);
+    }
+    lines.push('');
+    lines.push(
+      bn
+        ? 'দ্রষ্টব্য: এগুলো ক্যালেন্ডার অনুযায়ী প্রত্যাশিত তারিখ, ঘোষণা নয়। স্থানীয় চাঁদ দেখা এক দিন আগ-পিছ করতে পারে। রোজা, ঈদ বা কোরবানির চূড়ান্ত তারিখের জন্য আপনার দেশের চাঁদ দেখা কমিটির ঘোষণা অনুসরণ করুন।'
+        : 'NOTE: these are the dates the calendar expects, not announcements. Local moon sighting commonly shifts them by a day. For Ramadan, Eid or Hajj, follow your local moon-sighting authority, which decides.'
+    );
+    lines.push('');
+  }
+
+  const WD = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  lines.push('Hijri  Gregorian    Day');
+  for (const d of m.days) {
+    const sig = significanceFor(hm, d.hijriDay);
+    lines.push(`${String(d.hijriDay).padStart(5)}  ${iso(d.gregorian)}   ${WD[d.weekday]}${sig ? '   * ' + (bn ? sig.titleBn : sig.title) : ''}`);
+  }
+  return lines.join('\n');
+}
+
 function renderName(x) {
   return `${x.n}. ${x.ar}  ${x.tr}\n   English: ${x.en}\n   Bengali: ${x.bn}`;
 }
@@ -333,6 +408,8 @@ export async function callTool(name, args = {}) {
       return callHijri(args);
     case 'get_quran_audio':
       return callQuranAudio(args);
+    case 'get_hijri_calendar':
+      return callHijriCalendar(args);
     case 'get_asma_ul_husna':
       return callAsmaUlHusna(args);
     default:

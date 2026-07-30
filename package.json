@@ -1,6 +1,6 @@
 {
   "name": "wasilah-mcp",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "type": "module",
   "description": "Remote MCP server exposing Wasilah prayer times, Qibla, Hijri date, and Quran audio as Claude connector tools.",

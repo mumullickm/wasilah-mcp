@@ -54,7 +54,14 @@ function tabularHijri(year, month, day) {
   return { year: yearOut, month: monthIndex, day: dayOut, source: 'tabular' };
 }
 
-export function hijriDate(year, month, day) {
+export const HIJRI_METHODS = ['umm_al_qura', 'tabular'];
+
+export function hijriDate(year, month, day, method = 'umm_al_qura') {
+  if (method === 'tabular') {
+    const t = tabularHijri(year, month, day);
+    return { year: t.year, monthNumber: t.month, monthName: MONTHS[t.month - 1], day: t.day,
+      formatted: `${t.day} ${MONTHS[t.month - 1]} ${t.year} AH`, source: 'tabular' };
+  }
   try {
     const date = new Date(Date.UTC(year, month - 1, day, 12));
     const dtf = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', {
@@ -91,3 +98,22 @@ export function hijriDate(year, month, day) {
     source: 'tabular',
   };
 }
+
+// Walk Gregorian days around an estimate and collect every one that falls in
+// the requested Hijri month. Cheap and exact, and it needs no reverse
+// conversion table.
+export function hijriMonth(hYear, hMonth, method = 'umm_al_qura') {
+  const approxJD = Math.round((hYear - 1) * 354.367 + (hMonth - 1) * 29.531) + 1948440;
+  const start = new Date(Date.UTC(1970, 0, 1) + (approxJD - 2440588) * 86400000);
+  const days = [];
+  for (let i = -45; i <= 45; i++) {
+    const d = new Date(start.getTime() + i * 86400000);
+    const g = { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate() };
+    const h = hijriDate(g.year, g.month, g.day, method);
+    if (h.year === hYear && h.monthNumber === hMonth) days.push({ hijriDay: h.day, gregorian: g, weekday: d.getUTCDay() });
+  }
+  days.sort((a, b) => a.hijriDay - b.hijriDay);
+  return { year: hYear, monthNumber: hMonth, monthName: MONTHS[hMonth - 1], length: days.length, days, method };
+}
+
+export { MONTHS as HIJRI_MONTHS };
