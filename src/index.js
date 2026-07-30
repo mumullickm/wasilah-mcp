@@ -3,6 +3,7 @@ import { FAVICON_PNG_BASE64 } from './favicon.js';
 import { LOGO_SVG } from './logo.js';
 import { handleApi } from './api.js';
 import { renderEmbed } from './embed.js';
+import { isAuto } from './geo.js';
 
 const SERVER_INFO = { name: 'wasilah', title: 'Wasilah', version: '0.1.0' };
 const PROTOCOL_VERSION = '2025-06-18';
@@ -267,10 +268,14 @@ export default {
     }
 
     if (url.pathname === '/embed' && request.method === 'GET') {
-      return new Response(renderEmbed(url), {
+      // An auto-located card is specific to the visitor who asked for it.
+      // Caching it publicly would hand the first visitor's city to everyone
+      // who loads the same iframe URL afterwards.
+      const auto = isAuto(url.searchParams.get('city'));
+      return new Response(renderEmbed(url, request), {
         headers: {
           'Content-Type': 'text/html; charset=utf-8',
-          'Cache-Control': 'public, max-age=300',
+          'Cache-Control': auto ? 'private, no-store' : 'public, max-age=300',
           ...CORS,
         },
       });

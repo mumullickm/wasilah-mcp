@@ -4,8 +4,9 @@
 import { computePrayerTimes, METHOD_LABELS } from './prayer.js';
 import { qiblaBearing } from './qibla.js';
 import { hijriDate } from './hijri.js';
-import { quranAudio } from './quran.js';
+import { quranAudio, RECITERS, DEFAULT_RECITER } from './quran.js';
 import { geocodeCity } from './geocode.js';
+import { locationFromRequest, isAuto } from './geo.js';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -55,7 +56,7 @@ function weekday(timeZone, y, m, d) {
   return new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', weekday: 'long' }).format(date);
 }
 
-async function resolveLocation(q) {
+async function resolveLocation(q, request) {
   const lat = q.get('latitude') ?? q.get('lat');
   const lon = q.get('longitude') ?? q.get('lon');
   if (lat != null && lon != null) {
@@ -68,8 +69,15 @@ async function resolveLocation(q) {
     };
   }
   const city = q.get('city');
+  if (isAuto(city)) {
+    const auto = locationFromRequest(request);
+    if (auto) return auto;
+    const e = new Error('Could not place this request. Pass `city`, or `latitude` and `longitude`.');
+    e.status = 400;
+    throw e;
+  }
   if (city) return geocodeCity(city);
-  const err = new Error('Provide `city`, or `latitude` and `longitude` (with optional `timezone`).');
+  const err = new Error('Provide `city`, `city=auto`, or `latitude` and `longitude` (with optional `timezone`).');
   err.status = 400;
   throw err;
 }
@@ -112,6 +120,19 @@ function prayerTimes(loc, q) {
 }
 
 export async function handleApi(url, request) {
+  const response = await handleApiInner(url, request);
+  // An auto-located answer belongs to the caller who asked for it. The default
+  // `public, max-age=300` would let a shared cache replay one visitor's city
+  // to the next, so auto responses opt out.
+  if (isAuto(url.searchParams.get('city'))) {
+    const headers = new Headers(response.headers);
+    headers.set('Cache-Control', 'private, no-store');
+    return new Response(response.body, { status: response.status, headers });
+  }
+  return response;
+}
+
+async function handleApiInner(url, request) {
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
   const q = url.searchParams;
   const path = url.pathname;
@@ -128,13 +149,28 @@ export async function handleApi(url, request) {
           '/api/qibla?city=London',
           '/api/hijri[?date=YYYY-MM-DD]',
           '/api/quran-audio?surah=36[&reciter=ar.alafasy]',
+          '/api/reciters',
         ],
+        location: 'Any endpoint taking `city` also accepts `city=auto`, which uses the approximate location of the caller and is never cached.',
         methods: Object.keys(METHOD_LABELS),
       });
     }
 
+    if (path === '/api/reciters') {
+      return json({
+        default: DEFAULT_RECITER,
+        note: 'fullSurah reciters return a single audioUrl. The rest return ayahAudio numbering to build a playlist from.',
+        reciters: Object.entries(RECITERS).map(([edition, m]) => ({
+          edition,
+          name: m.name,
+          fullSurah: m.surah,
+          perAyah: m.ayah,
+        })),
+      });
+    }
+
     if (path === '/api/prayer-times') {
-      const loc = await resolveLocation(q);
+      const loc = await resolveLocation(q, request);
       const pt = prayerTimes(loc, q);
       return json({
         location: { name: loc.name, country: loc.country, latitude: loc.latitude, longitude: loc.longitude, timezone: loc.timezone },
@@ -148,7 +184,7 @@ export async function handleApi(url, request) {
     }
 
     if (path === '/api/next-prayer') {
-      const loc = await resolveLocation(q);
+      const loc = await resolveLocation(q, request);
       const now = localNowMinutes(loc.timezone);
       const today = prayerTimes(loc, q);
       const prayers = today.result.entries.filter((e) => e.isPrayer && e.clock);
@@ -181,7 +217,7 @@ export async function handleApi(url, request) {
     }
 
     if (path === '/api/qibla') {
-      const loc = await resolveLocation(q);
+      const loc = await resolveLocation(q, request);
       const { bearing, compass } = qiblaBearing(loc.latitude, loc.longitude);
       return json({
         location: { name: loc.name, country: loc.country, latitude: loc.latitude, longitude: loc.longitude },
@@ -216,6 +252,7 @@ export async function handleApi(url, request) {
         reciter: r.reciter,
         edition: r.edition,
         audioUrl: r.audioUrl,
+        ayahAudio: r.ayahAudio,
       });
     }
 

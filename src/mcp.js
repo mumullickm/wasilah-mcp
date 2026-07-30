@@ -84,7 +84,7 @@ export const TOOLS = [
     name: 'get_quran_audio',
     annotations: { title: 'Quran audio', readOnlyHint: true, openWorldHint: false },
     description:
-      'Get a streaming audio URL for full-surah Quran recitation, plus the surah name and ayah count.',
+      'Get streaming audio for a surah, plus the surah name and ayah count. Most reciters return a single full-surah URL; the rest return per-ayah numbering to build a playlist from.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -92,7 +92,8 @@ export const TOOLS = [
         reciter: {
           type: 'string',
           enum: Object.keys(RECITERS),
-          description: 'Reciter edition. Defaults to "ar.alafasy" (Mishary Rashid Alafasy).',
+          description:
+            'Reciter edition. Defaults to "ar.alafasy" (Mishary Rashid Alafasy). Only ar.alafasy, ar.abdulbasitmurattal and ar.abdullahbasfar have single-file surah audio; the others are per-ayah.',
         },
       },
       required: ['surah'],
@@ -262,7 +263,23 @@ function callHijri(args) {
 
 function callQuranAudio(args) {
   const r = quranAudio(args.surah, args.reciter);
-  return `Surah ${r.surahNumber}: ${r.name} (${r.arabic}), ${r.ayahs} ayahs.\nReciter: ${r.reciter}\nAudio: ${r.audioUrl}`;
+  const lines = [
+    `Surah ${r.surahNumber}: ${r.name} (${r.arabic}), ${r.ayahs} ayahs.`,
+    `Reciter: ${r.reciter}`,
+  ];
+  if (r.audioUrl) {
+    lines.push(`Audio (full surah): ${r.audioUrl}`);
+  }
+  if (r.ayahAudio) {
+    const a = r.ayahAudio;
+    lines.push(
+      `Audio (per ayah): ${a.urlTemplate} for {ayah} = ${a.firstAyah} to ${a.lastAyah} (${a.count} files, in order).`
+    );
+  }
+  if (!r.audioUrl && !r.ayahAudio) {
+    lines.push('No audio is available for this reciter.');
+  }
+  return lines.join('\n');
 }
 
 export async function callTool(name, args = {}) {
