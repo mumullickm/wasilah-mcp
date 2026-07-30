@@ -11,5 +11,7 @@
   },
   "devDependencies": {
     "wrangler": "^4.115.0"
-  }
+  },
+  "license": "MIT",
+  "author": "Miraz Mullick"
 }
