@@ -111,6 +111,33 @@ await test('renamed districts resolve under the name people actually type', asyn
   }
 });
 
+console.log('\nAsma ul Husna');
+
+await test('lookup by number returns the right name, trilingual', async () => {
+  const r = await call('get_asma_ul_husna', { number: 1 });
+  const t = r.content[0].text;
+  assert.match(t, /Ar-Rahman/);
+  assert.match(t, /\u0627\u0644\u0631/, 'Arabic script missing');
+  assert.match(t, /\u09aa\u09b0\u09ae/, 'Bengali missing, which is the coverage the incumbents lack');
+});
+
+await test('search matches on English meaning', async () => {
+  const r = await call('get_asma_ul_husna', { search: 'merciful' });
+  assert.match(r.content[0].text, /Ar-Raheem/);
+});
+
+await test('no argument returns all 99', async () => {
+  const r = await call('get_asma_ul_husna', {});
+  const nums = (r.content[0].text.match(/^\d+\. /gm) || []).length;
+  assert.equal(nums, 99, `expected 99 names, rendered ${nums}`);
+});
+
+await test('out-of-range number fails cleanly', async () => {
+  const r = await call('get_asma_ul_husna', { number: 200 });
+  assert.equal(r.isError, true);
+  assert.match(r.content[0].text, /between 1 and 99/);
+});
+
 console.log('\nAttribution (CC BY 4.0 compliance for the bundled GeoNames data)');
 
 await test('/api index serves the GeoNames attribution', async () => {

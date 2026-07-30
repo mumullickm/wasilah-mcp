@@ -1,5 +1,6 @@
 import { computePrayerTimes, formatClock, METHOD_LABELS } from './prayer.js';
 import { qiblaBearing } from './qibla.js';
+import { ASMA_UL_HUSNA } from './names.js';
 import { hijriDate } from './hijri.js';
 import { geocodeCity } from './geocode.js';
 import { quranAudio, RECITERS } from './quran.js';
@@ -77,6 +78,19 @@ export const TOOLS = [
       type: 'object',
       properties: {
         date: { type: 'string', description: 'Gregorian date as YYYY-MM-DD. Defaults to today (UTC).' },
+      },
+    },
+  },
+  {
+    name: 'get_asma_ul_husna',
+    annotations: { title: 'Names of Allah', readOnlyHint: true, openWorldHint: false },
+    description:
+      'Look up the 99 Names of Allah (Asma ul Husna). Returns Arabic, transliteration, English and Bengali. Give a number for one name, a search term to match by meaning or transliteration, or neither to get all 99.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        number: { type: 'integer', minimum: 1, maximum: 99, description: 'Name number, 1 to 99.' },
+        search: { type: 'string', description: 'Match against transliteration, English meaning, Bengali or Arabic.' },
       },
     },
   },
@@ -287,6 +301,26 @@ function callQuranAudio(args) {
   return lines.join('\n');
 }
 
+function renderName(x) {
+  return `${x.n}. ${x.ar}  ${x.tr}\n   English: ${x.en}\n   Bengali: ${x.bn}`;
+}
+
+function callAsmaUlHusna(args) {
+  if (args.number != null) {
+    const n = Number(args.number);
+    if (!Number.isInteger(n) || n < 1 || n > 99) throw new Error('`number` must be an integer between 1 and 99.');
+    return renderName(ASMA_UL_HUSNA[n - 1]);
+  }
+  if (args.search) {
+    const q = String(args.search).trim().toLowerCase();
+    const hits = ASMA_UL_HUSNA.filter((x) =>
+      x.tr.toLowerCase().includes(q) || x.en.toLowerCase().includes(q) || x.bn.includes(args.search.trim()) || x.ar.includes(args.search.trim()));
+    if (!hits.length) throw new Error(`No name matched "${args.search}". Try an English meaning such as "merciful", or a transliteration such as "Rahman".`);
+    return `${hits.length} name${hits.length > 1 ? 's' : ''} matching "${args.search}":\n\n` + hits.map(renderName).join('\n\n');
+  }
+  return 'The 99 Names of Allah (Asma ul Husna):\n\n' + ASMA_UL_HUSNA.map(renderName).join('\n\n');
+}
+
 export async function callTool(name, args = {}) {
   switch (name) {
     case 'get_prayer_times':
@@ -299,6 +333,8 @@ export async function callTool(name, args = {}) {
       return callHijri(args);
     case 'get_quran_audio':
       return callQuranAudio(args);
+    case 'get_asma_ul_husna':
+      return callAsmaUlHusna(args);
     default:
       throw new Error(`Unknown tool: ${name}`);
   }

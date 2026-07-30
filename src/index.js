@@ -5,7 +5,7 @@ import { handleApi } from './api.js';
 import { renderEmbed } from './embed.js';
 import { isAuto } from './geo.js';
 
-const SERVER_INFO = { name: 'wasilah', title: 'Wasilah', version: '1.0.0' };
+const SERVER_INFO = { name: 'wasilah', title: 'Wasilah', version: '1.1.0' };
 const PROTOCOL_VERSION = '2025-06-18';
 
 const CORS = {
