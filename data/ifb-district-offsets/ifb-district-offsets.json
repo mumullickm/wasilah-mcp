@@ -13,7 +13,10 @@
     "note": "The offset tables were transcribed from the published PDF. The Dhaka base times are in the same document as a date table at 6-day intervals."
   },
   "applies_to": {
-    "confirmed": ["sehri_end", "iftar"],
+    "confirmed": [
+      "sehri_end",
+      "iftar"
+    ],
     "explanation": "The IFB offset tables are headed সাহরী and ইফতার. Those are the two columns the source publishes."
   },
   "caveats": [
@@ -31,85 +34,447 @@
     "iftar_offset_minutes": 0
   },
   "districts": [
-    { "en": "Dhaka", "bn": "ঢাকা", "division": "Dhaka", "sehri": 0, "iftar": 0 },
-
-    { "en": "Gazipur", "bn": "গাজীপুর", "division": "Dhaka", "sehri": 1, "iftar": 1 },
-    { "en": "Shariatpur", "bn": "শরীয়তপুর", "division": "Dhaka", "sehri": 1, "iftar": 1 },
-    { "en": "Madaripur", "bn": "মাদারীপুর", "division": "Dhaka", "sehri": 1, "iftar": 1 },
-    { "en": "Pirojpur", "bn": "পিরোজপুর", "division": "Barisal", "sehri": 1, "iftar": 1 },
-    { "en": "Barisal", "bn": "বরিশাল", "division": "Barisal", "sehri": 1, "iftar": 1 },
-    { "en": "Jhalokati", "bn": "ঝালকাঠি", "division": "Barisal", "sehri": 1, "iftar": 1 },
-    { "en": "Barguna", "bn": "বরগুনা", "division": "Barisal", "sehri": 1, "iftar": 1 },
-
-    { "en": "Mymensingh", "bn": "ময়মনসিংহ", "division": "Mymensingh", "sehri": 2, "iftar": 2 },
-    { "en": "Tangail", "bn": "টাঙ্গাইল", "division": "Dhaka", "sehri": 2, "iftar": 2 },
-    { "en": "Bagerhat", "bn": "বাগেরহাট", "division": "Khulna", "sehri": 2, "iftar": 2 },
-    { "en": "Jamalpur", "bn": "জামালপুর", "division": "Mymensingh", "sehri": 2, "iftar": 2 },
-    { "en": "Sherpur", "bn": "শেরপুর", "division": "Mymensingh", "sehri": 2, "iftar": 2 },
-    { "en": "Manikganj", "bn": "মানিকগঞ্জ", "division": "Dhaka", "sehri": 2, "iftar": 2 },
-
-    { "en": "Faridpur", "bn": "ফরিদপুর", "division": "Dhaka", "sehri": 3, "iftar": 3 },
-    { "en": "Gopalganj", "bn": "গোপালগঞ্জ", "division": "Dhaka", "sehri": 3, "iftar": 3 },
-    { "en": "Sirajganj", "bn": "সিরাজগঞ্জ", "division": "Rajshahi", "sehri": 3, "iftar": 3 },
-    { "en": "Narail", "bn": "নড়াইল", "division": "Khulna", "sehri": 3, "iftar": 3 },
-    { "en": "Khulna", "bn": "খুলনা", "division": "Khulna", "sehri": 3, "iftar": 3 },
-
-    { "en": "Magura", "bn": "মাগুরা", "division": "Khulna", "sehri": 4, "iftar": 4 },
-    { "en": "Rajbari", "bn": "রাজবাড়ী", "division": "Dhaka", "sehri": 4, "iftar": 4 },
-    { "en": "Pabna", "bn": "পাবনা", "division": "Rajshahi", "sehri": 4, "iftar": 4 },
-
-    { "en": "Satkhira", "bn": "সাতক্ষীরা", "division": "Khulna", "sehri": 5, "iftar": 5 },
-    { "en": "Kushtia", "bn": "কুষ্টিয়া", "division": "Khulna", "sehri": 5, "iftar": 5 },
-    { "en": "Jashore", "bn": "যশোর", "division": "Khulna", "sehri": 5, "iftar": 5 },
-    { "en": "Rangpur", "bn": "রংপুর", "division": "Rangpur", "sehri": 5, "iftar": 5 },
-    { "en": "Jhenaidah", "bn": "ঝিনাইদহ", "division": "Khulna", "sehri": 5, "iftar": 5 },
-
-    { "en": "Nilphamari", "bn": "নীলফামারী", "division": "Rangpur", "sehri": 6, "iftar": 6 },
-    { "en": "Chuadanga", "bn": "চুয়াডাঙ্গা", "division": "Khulna", "sehri": 6, "iftar": 6 },
-    { "en": "Kurigram", "bn": "কুড়িগ্রাম", "division": "Rangpur", "sehri": 6, "iftar": 6 },
-    { "en": "Gaibandha", "bn": "গাইবান্ধা", "division": "Rangpur", "sehri": 6, "iftar": 6 },
-
-    { "en": "Rajshahi", "bn": "রাজশাহী", "division": "Rajshahi", "sehri": 7, "iftar": 7 },
-    { "en": "Bogura", "bn": "বগুড়া", "division": "Rajshahi", "sehri": 7, "iftar": 7 },
-    { "en": "Meherpur", "bn": "মেহেরপুর", "division": "Khulna", "sehri": 7, "iftar": 7 },
-    { "en": "Lalmonirhat", "bn": "লালমনিরহাট", "division": "Rangpur", "sehri": 7, "iftar": 7 },
-
-    { "en": "Chapainawabganj", "bn": "চাঁপাইনবাবগঞ্জ", "division": "Rajshahi", "sehri": 8, "iftar": 8 },
-    { "en": "Naogaon", "bn": "নওগাঁ", "division": "Rajshahi", "sehri": 8, "iftar": 8 },
-    { "en": "Natore", "bn": "নাটোর", "division": "Rajshahi", "sehri": 8, "iftar": 8 },
-
-    { "en": "Dinajpur", "bn": "দিনাজপুর", "division": "Rangpur", "sehri": 10, "iftar": 11 },
-    { "en": "Thakurgaon", "bn": "ঠাকুরগাঁও", "division": "Rangpur", "sehri": 10, "iftar": 11 },
-    { "en": "Panchagarh", "bn": "পঞ্চগড়", "division": "Rangpur", "sehri": 10, "iftar": 11 },
-
-    { "en": "Narsingdi", "bn": "নরসিংদী", "division": "Dhaka", "sehri": -1, "iftar": -1 },
-    { "en": "Narayanganj", "bn": "নারায়ণগঞ্জ", "division": "Dhaka", "sehri": -1, "iftar": -1 },
-    { "en": "Munshiganj", "bn": "মুন্সিগঞ্জ", "division": "Dhaka", "sehri": -1, "iftar": -1 },
-    { "en": "Chandpur", "bn": "চাঁদপুর", "division": "Chattogram", "sehri": -1, "iftar": -1 },
-
-    { "en": "Kishoreganj", "bn": "কিশোরগঞ্জ", "division": "Dhaka", "sehri": -2, "iftar": -2 },
-    { "en": "Patuakhali", "bn": "পটুয়াখালী", "division": "Barisal", "sehri": -2, "iftar": -2 },
-    { "en": "Bhola", "bn": "ভোলা", "division": "Barisal", "sehri": -2, "iftar": -2 },
-    { "en": "Lakshmipur", "bn": "লক্ষ্মীপুর", "division": "Chattogram", "sehri": -2, "iftar": -2 },
-
-    { "en": "Netrokona", "bn": "নেত্রকোনা", "division": "Mymensingh", "sehri": -3, "iftar": -3 },
-    { "en": "Cumilla", "bn": "কুমিল্লা", "division": "Chattogram", "sehri": -3, "iftar": -3 },
-    { "en": "Brahmanbaria", "bn": "ব্রাহ্মণবাড়িয়া", "division": "Chattogram", "sehri": -3, "iftar": -3 },
-
-    { "en": "Noakhali", "bn": "নোয়াখালী", "division": "Chattogram", "sehri": -4, "iftar": -4 },
-    { "en": "Feni", "bn": "ফেনী", "division": "Chattogram", "sehri": -4, "iftar": -4 },
-    { "en": "Sunamganj", "bn": "সুনামগঞ্জ", "division": "Sylhet", "sehri": -4, "iftar": -4 },
-    { "en": "Habiganj", "bn": "হবিগঞ্জ", "division": "Sylhet", "sehri": -4, "iftar": -4 },
-
-    { "en": "Chattogram", "bn": "চট্টগ্রাম", "division": "Chattogram", "sehri": -5, "iftar": -5 },
-
-    { "en": "Cox's Bazar", "bn": "কক্সবাজার", "division": "Chattogram", "sehri": -6, "iftar": -6 },
-    { "en": "Sylhet", "bn": "সিলেট", "division": "Sylhet", "sehri": -6, "iftar": -6 },
-    { "en": "Moulvibazar", "bn": "মৌলভীবাজার", "division": "Sylhet", "sehri": -6, "iftar": -6 },
-
-    { "en": "Khagrachhari", "bn": "খাগড়াছড়ি", "division": "Chattogram", "sehri": -7, "iftar": -7 },
-    { "en": "Rangamati", "bn": "রাঙ্গামাটি", "division": "Chattogram", "sehri": -7, "iftar": -7 },
-    { "en": "Bandarban", "bn": "বান্দরবান", "division": "Chattogram", "sehri": -7, "iftar": -7 }
+    {
+      "en": "Dhaka",
+      "bn": "ঢাকা",
+      "division": "Dhaka",
+      "sehri": 0,
+      "iftar": 0
+    },
+    {
+      "en": "Gazipur",
+      "bn": "গাজীপুর",
+      "division": "Dhaka",
+      "sehri": 1,
+      "iftar": 1
+    },
+    {
+      "en": "Shariatpur",
+      "bn": "শরীয়তপুর",
+      "division": "Dhaka",
+      "sehri": 1,
+      "iftar": 1
+    },
+    {
+      "en": "Madaripur",
+      "bn": "মাদারীপুর",
+      "division": "Dhaka",
+      "sehri": 1,
+      "iftar": 1
+    },
+    {
+      "en": "Pirojpur",
+      "bn": "পিরোজপুর",
+      "division": "Barisal",
+      "sehri": 1,
+      "iftar": 1
+    },
+    {
+      "en": "Barisal",
+      "bn": "বরিশাল",
+      "division": "Barisal",
+      "sehri": 1,
+      "iftar": 1
+    },
+    {
+      "en": "Jhalokati",
+      "bn": "ঝালকাঠি",
+      "division": "Barisal",
+      "sehri": 1,
+      "iftar": 1
+    },
+    {
+      "en": "Barguna",
+      "bn": "বরগুনা",
+      "division": "Barisal",
+      "sehri": 1,
+      "iftar": 1
+    },
+    {
+      "en": "Mymensingh",
+      "bn": "ময়মনসিংহ",
+      "division": "Mymensingh",
+      "sehri": 2,
+      "iftar": 2
+    },
+    {
+      "en": "Tangail",
+      "bn": "টাঙ্গাইল",
+      "division": "Dhaka",
+      "sehri": 2,
+      "iftar": 2
+    },
+    {
+      "en": "Bagerhat",
+      "bn": "বাগেরহাট",
+      "division": "Khulna",
+      "sehri": 2,
+      "iftar": 2
+    },
+    {
+      "en": "Jamalpur",
+      "bn": "জামালপুর",
+      "division": "Mymensingh",
+      "sehri": 2,
+      "iftar": 2
+    },
+    {
+      "en": "Sherpur",
+      "bn": "শেরপুর",
+      "division": "Mymensingh",
+      "sehri": 2,
+      "iftar": 2
+    },
+    {
+      "en": "Manikganj",
+      "bn": "মানিকগঞ্জ",
+      "division": "Dhaka",
+      "sehri": 2,
+      "iftar": 2
+    },
+    {
+      "en": "Faridpur",
+      "bn": "ফরিদপুর",
+      "division": "Dhaka",
+      "sehri": 3,
+      "iftar": 3
+    },
+    {
+      "en": "Gopalganj",
+      "bn": "গোপালগঞ্জ",
+      "division": "Dhaka",
+      "sehri": 3,
+      "iftar": 3
+    },
+    {
+      "en": "Sirajganj",
+      "bn": "সিরাজগঞ্জ",
+      "division": "Rajshahi",
+      "sehri": 3,
+      "iftar": 3
+    },
+    {
+      "en": "Narail",
+      "bn": "নড়াইল",
+      "division": "Khulna",
+      "sehri": 3,
+      "iftar": 3
+    },
+    {
+      "en": "Khulna",
+      "bn": "খুলনা",
+      "division": "Khulna",
+      "sehri": 3,
+      "iftar": 3
+    },
+    {
+      "en": "Magura",
+      "bn": "মাগুরা",
+      "division": "Khulna",
+      "sehri": 4,
+      "iftar": 4
+    },
+    {
+      "en": "Rajbari",
+      "bn": "রাজবাড়ী",
+      "division": "Dhaka",
+      "sehri": 4,
+      "iftar": 4
+    },
+    {
+      "en": "Pabna",
+      "bn": "পাবনা",
+      "division": "Rajshahi",
+      "sehri": 4,
+      "iftar": 4
+    },
+    {
+      "en": "Satkhira",
+      "bn": "সাতক্ষীরা",
+      "division": "Khulna",
+      "sehri": 5,
+      "iftar": 5
+    },
+    {
+      "en": "Kushtia",
+      "bn": "কুষ্টিয়া",
+      "division": "Khulna",
+      "sehri": 5,
+      "iftar": 5
+    },
+    {
+      "en": "Jashore",
+      "bn": "যশোর",
+      "division": "Khulna",
+      "sehri": 5,
+      "iftar": 5
+    },
+    {
+      "en": "Rangpur",
+      "bn": "রংপুর",
+      "division": "Rangpur",
+      "sehri": 5,
+      "iftar": 5
+    },
+    {
+      "en": "Jhenaidah",
+      "bn": "ঝিনাইদহ",
+      "division": "Khulna",
+      "sehri": 5,
+      "iftar": 5
+    },
+    {
+      "en": "Nilphamari",
+      "bn": "নীলফামারী",
+      "division": "Rangpur",
+      "sehri": 6,
+      "iftar": 6
+    },
+    {
+      "en": "Chuadanga",
+      "bn": "চুয়াডাঙ্গা",
+      "division": "Khulna",
+      "sehri": 6,
+      "iftar": 6
+    },
+    {
+      "en": "Kurigram",
+      "bn": "কুড়িগ্রাম",
+      "division": "Rangpur",
+      "sehri": 6,
+      "iftar": 6
+    },
+    {
+      "en": "Gaibandha",
+      "bn": "গাইবান্ধা",
+      "division": "Rangpur",
+      "sehri": 6,
+      "iftar": 6
+    },
+    {
+      "en": "Rajshahi",
+      "bn": "রাজশাহী",
+      "division": "Rajshahi",
+      "sehri": 7,
+      "iftar": 7
+    },
+    {
+      "en": "Bogura",
+      "bn": "বগুড়া",
+      "division": "Rajshahi",
+      "sehri": 7,
+      "iftar": 7
+    },
+    {
+      "en": "Meherpur",
+      "bn": "মেহেরপুর",
+      "division": "Khulna",
+      "sehri": 7,
+      "iftar": 7
+    },
+    {
+      "en": "Lalmonirhat",
+      "bn": "লালমনিরহাট",
+      "division": "Rangpur",
+      "sehri": 7,
+      "iftar": 7
+    },
+    {
+      "en": "Chapainawabganj",
+      "bn": "চাঁপাইনবাবগঞ্জ",
+      "division": "Rajshahi",
+      "sehri": 8,
+      "iftar": 8
+    },
+    {
+      "en": "Naogaon",
+      "bn": "নওগাঁ",
+      "division": "Rajshahi",
+      "sehri": 8,
+      "iftar": 8
+    },
+    {
+      "en": "Natore",
+      "bn": "নাটোর",
+      "division": "Rajshahi",
+      "sehri": 8,
+      "iftar": 8
+    },
+    {
+      "en": "Dinajpur",
+      "bn": "দিনাজপুর",
+      "division": "Rangpur",
+      "sehri": 10,
+      "iftar": 11
+    },
+    {
+      "en": "Thakurgaon",
+      "bn": "ঠাকুরগাঁও",
+      "division": "Rangpur",
+      "sehri": 10,
+      "iftar": 11
+    },
+    {
+      "en": "Panchagarh",
+      "bn": "পঞ্চগড়",
+      "division": "Rangpur",
+      "sehri": 10,
+      "iftar": 11
+    },
+    {
+      "en": "Narsingdi",
+      "bn": "নরসিংদী",
+      "division": "Dhaka",
+      "sehri": -1,
+      "iftar": -1
+    },
+    {
+      "en": "Narayanganj",
+      "bn": "নারায়ণগঞ্জ",
+      "division": "Dhaka",
+      "sehri": -1,
+      "iftar": -1
+    },
+    {
+      "en": "Munshiganj",
+      "bn": "মুন্সিগঞ্জ",
+      "division": "Dhaka",
+      "sehri": -1,
+      "iftar": -1
+    },
+    {
+      "en": "Chandpur",
+      "bn": "চাঁদপুর",
+      "division": "Chattogram",
+      "sehri": -1,
+      "iftar": -1
+    },
+    {
+      "en": "Kishoreganj",
+      "bn": "কিশোরগঞ্জ",
+      "division": "Dhaka",
+      "sehri": -2,
+      "iftar": -2
+    },
+    {
+      "en": "Patuakhali",
+      "bn": "পটুয়াখালী",
+      "division": "Barisal",
+      "sehri": -2,
+      "iftar": -2
+    },
+    {
+      "en": "Bhola",
+      "bn": "ভোলা",
+      "division": "Barisal",
+      "sehri": -2,
+      "iftar": -2
+    },
+    {
+      "en": "Lakshmipur",
+      "bn": "লক্ষ্মীপুর",
+      "division": "Chattogram",
+      "sehri": -2,
+      "iftar": -2
+    },
+    {
+      "en": "Netrokona",
+      "bn": "নেত্রকোনা",
+      "division": "Mymensingh",
+      "sehri": -3,
+      "iftar": -3
+    },
+    {
+      "en": "Cumilla",
+      "bn": "কুমিল্লা",
+      "division": "Chattogram",
+      "sehri": -3,
+      "iftar": -3
+    },
+    {
+      "en": "Brahmanbaria",
+      "bn": "ব্রাহ্মণবাড়িয়া",
+      "division": "Chattogram",
+      "sehri": -3,
+      "iftar": -3
+    },
+    {
+      "en": "Noakhali",
+      "bn": "নোয়াখালী",
+      "division": "Chattogram",
+      "sehri": -4,
+      "iftar": -4
+    },
+    {
+      "en": "Feni",
+      "bn": "ফেনী",
+      "division": "Chattogram",
+      "sehri": -4,
+      "iftar": -4
+    },
+    {
+      "en": "Sunamganj",
+      "bn": "সুনামগঞ্জ",
+      "division": "Sylhet",
+      "sehri": -4,
+      "iftar": -4
+    },
+    {
+      "en": "Habiganj",
+      "bn": "হবিগঞ্জ",
+      "division": "Sylhet",
+      "sehri": -4,
+      "iftar": -4
+    },
+    {
+      "en": "Chattogram",
+      "bn": "চট্টগ্রাম",
+      "division": "Chattogram",
+      "sehri": -5,
+      "iftar": -5
+    },
+    {
+      "en": "Cox's Bazar",
+      "bn": "কক্সবাজার",
+      "division": "Chattogram",
+      "sehri": -6,
+      "iftar": -6
+    },
+    {
+      "en": "Sylhet",
+      "bn": "সিলেট",
+      "division": "Sylhet",
+      "sehri": -6,
+      "iftar": -6
+    },
+    {
+      "en": "Moulvibazar",
+      "bn": "মৌলভীবাজার",
+      "division": "Sylhet",
+      "sehri": -6,
+      "iftar": -6
+    },
+    {
+      "en": "Khagrachhari",
+      "bn": "খাগড়াছড়ি",
+      "division": "Chattogram",
+      "sehri": -7,
+      "iftar": -7
+    },
+    {
+      "en": "Rangamati",
+      "bn": "রাঙ্গামাটি",
+      "division": "Chattogram",
+      "sehri": -7,
+      "iftar": -7
+    },
+    {
+      "en": "Bandarban",
+      "bn": "বান্দরবান",
+      "division": "Chattogram",
+      "sehri": -7,
+      "iftar": -7
+    }
   ],
   "unresolved": [
     {
@@ -118,7 +483,9 @@
       "division": "Rajshahi",
       "sehri": null,
       "iftar": null,
-      "reason": "Not present in the IFB offset tables in the source document. Neighbouring Rajshahi-division districts sit at +7 (Bogura) and +8 (Naogaon, Natore), so the true value is most likely in that range, but it is left null rather than estimated."
+      "reason": "Not present in the IFB offset tables in the source document. Left null rather than estimated. Supporting evidence, not a substitute for an IFB value: computing Maghrib astronomically for the Joypurhat district seat on 2026-07-31 gives +8 minutes relative to Dhaka, which sits exactly between the published neighbours Bogura (+7) and Naogaon/Natore (+8). Independent cross-checks on the same date reproduced published offsets to within 1 to 3 minutes (Comilla exact, Jashore 1, Moulvibazar 2, Bandarban 3).",
+      "astronomical_estimate_minutes": 8,
+      "astronomical_estimate_note": "Evidence only. Do not treat as IFB's value."
     }
   ]
 }
