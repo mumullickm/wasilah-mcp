@@ -27,6 +27,8 @@ function hhmm(clock) {
   return `${String(clock.hh).padStart(2, '0')}:${String(clock.mm).padStart(2, '0')}`;
 }
 
+const GEONAMES_ATTRIBUTION = 'City data (c) GeoNames contributors, CC BY 4.0, https://www.geonames.org/';
+
 function localToday(timeZone) {
   const dtf = new Intl.DateTimeFormat('en-US', {
     timeZone: timeZone && timeZone !== 'UTC' ? timeZone : 'UTC',
@@ -153,6 +155,11 @@ async function handleApiInner(url, request) {
         ],
         location: 'Any endpoint taking `city` also accepts `city=auto`, which uses the approximate location of the caller and is never cached.',
         methods: Object.keys(METHOD_LABELS),
+        license: {
+          code: 'MIT',
+          data: 'City data from GeoNames, CC BY 4.0 (https://www.geonames.org/). Prayer times computed on this server.',
+          attribution: 'Wasilah (https://wasilah.site). City data (c) GeoNames contributors, CC BY 4.0.',
+        },
       });
     }
 
@@ -173,6 +180,7 @@ async function handleApiInner(url, request) {
       const loc = await resolveLocation(q, request);
       const pt = prayerTimes(loc, q);
       return json({
+        attribution: GEONAMES_ATTRIBUTION,
         location: { name: loc.name, country: loc.country, latitude: loc.latitude, longitude: loc.longitude, timezone: loc.timezone },
         date: pt.date,
         method: pt.method,
@@ -208,6 +216,7 @@ async function handleApiInner(url, request) {
         until = 1440 - now + next.clock.minutesOfDay;
       }
       return json({
+        attribution: GEONAMES_ATTRIBUTION,
         location: { name: loc.name, country: loc.country, timezone: loc.timezone },
         next: next.name,
         time: hhmm(next.clock),
@@ -220,6 +229,7 @@ async function handleApiInner(url, request) {
       const loc = await resolveLocation(q, request);
       const { bearing, compass } = qiblaBearing(loc.latitude, loc.longitude);
       return json({
+        attribution: GEONAMES_ATTRIBUTION,
         location: { name: loc.name, country: loc.country, latitude: loc.latitude, longitude: loc.longitude },
         bearing,
         compass,

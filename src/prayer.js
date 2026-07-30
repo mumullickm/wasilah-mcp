@@ -119,6 +119,11 @@ function asrHourAngle(latitude, declination, shadowFactor) {
 // Workers runtime, so no timezone dependency is bundled.
 export function utcOffsetHours(timeZone, year, month, day) {
   if (!timeZone || timeZone === 'UTC') return 0;
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone });
+  } catch {
+    throw new Error(`Unknown timezone: ${timeZone}. Use an IANA name such as Asia/Dhaka.`);
+  }
   const offsetAt = (instant) => {
     const dtf = new Intl.DateTimeFormat('en-US', {
       timeZone,
