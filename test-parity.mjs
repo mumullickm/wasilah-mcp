@@ -88,6 +88,29 @@ await test('get_next_prayer also warns on coordinates without a timezone', async
   assert.match(r.content[0].text, /WARNING/, 'a wrong countdown is worse than a wrong table');
 });
 
+console.log('\nBangladesh coverage (the IFB dataset is district-keyed, so every district must resolve)');
+
+await test('all 64 IFB districts resolve to a Bangladesh location', async () => {
+  const { readFileSync } = await import('node:fs');
+  const { geocodeCity } = await import('./src/geocode.js');
+  const d = JSON.parse(readFileSync('./data/ifb-district-offsets/ifb-district-offsets.json', 'utf8'));
+  const all = [...d.districts, ...d.unresolved];
+  assert.equal(all.length, 64, 'the offset table should cover all 64 districts');
+  const missing = all.filter((x) => {
+    try { const r = geocodeCity(x.en); return !r || r.country !== 'Bangladesh'; }
+    catch { return true; }
+  }).map((x) => x.en);
+  assert.deepEqual(missing, [], `unresolvable districts: ${missing.join(', ')}`);
+});
+
+await test('renamed districts resolve under the name people actually type', async () => {
+  const { geocodeCity } = await import('./src/geocode.js');
+  for (const old of ['Comilla', 'Jessore', 'Bogra', 'Chittagong', 'Barishal']) {
+    const r = geocodeCity(old);
+    assert.ok(r && r.country === 'Bangladesh', `${old} should resolve`);
+  }
+});
+
 console.log('\nAttribution (CC BY 4.0 compliance for the bundled GeoNames data)');
 
 await test('/api index serves the GeoNames attribution', async () => {
