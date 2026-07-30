@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mumullickm/wasilah-mcp",
   "title": "Wasilah",
-  "description": "Prayer times, Qibla, Hijri date and month calendar, the 99 Names, Quran audio, and Islamic Foundation Bangladesh district offsets. English and Bengali. Authless, stateless, no external calls.",
+  "description": "Prayer times, Qibla, Hijri calendar, 99 Names, Quran audio, Bangladesh offsets. English + Bengali.",
   "repository": {
     "url": "https://github.com/mumullickm/wasilah-mcp",
     "source": "github"
