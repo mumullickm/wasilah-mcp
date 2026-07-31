@@ -5,7 +5,8 @@ import { ASMA_UL_HUSNA } from './names.js';
 import { hijriMonth, HIJRI_METHODS, HIJRI_MONTHS } from './hijri.js';
 import { significanceFor } from './significance.js';
 import { hijriDate } from './hijri.js';
-import { geocodeCity } from './geocode.js';
+import { geocodeCity, nearestCity, TZ_INFERENCE_LIMIT_KM } from './geocode.js';
+import { TASBEEH, tasbeehLookup, renderTasbeeh } from './tasbeeh.js';
 import { quranAudio, RECITERS } from './quran.js';
 
 const METHOD_KEYS = Object.keys(METHOD_LABELS);
@@ -21,8 +22,24 @@ const LOCATION_PROPS = {
   timezone: {
     type: 'string',
     description:
-      'IANA timezone, e.g. "Asia/Dhaka". Used with explicit latitude/longitude. Defaults to UTC if omitted.',
+      'IANA timezone, e.g. "Asia/Dhaka". Used with explicit latitude/longitude. If omitted, the zone is inferred from the nearest known city and reported in the answer.',
   },
+};
+
+// Mirrors the app's per-prayer offset settings. Sunrise is absent on purpose:
+// it is reference-only and the app never shifts it.
+const OFFSET_PROP = {
+  type: 'object',
+  description:
+    'Optional per-prayer adjustment in whole minutes, matching the offset settings in the Wasilah app, e.g. {"maghrib": 3}. Applies to the five obligatory prayers only; Sunrise is never offset. These are the user\'s own adjustments, not a calculation method.',
+  properties: {
+    fajr: { type: 'integer' },
+    dhuhr: { type: 'integer' },
+    asr: { type: 'integer' },
+    maghrib: { type: 'integer' },
+    isha: { type: 'integer' },
+  },
+  additionalProperties: false,
 };
 
 export const TOOLS = [
@@ -50,6 +67,7 @@ export const TOOLS = [
           description:
             'Asr juristic method. "auto" follows the calculation method’s regional default.',
         },
+        offset_minutes: OFFSET_PROP,
       },
     },
   },
@@ -64,6 +82,7 @@ export const TOOLS = [
         ...LOCATION_PROPS,
         method: { type: 'string', enum: METHOD_KEYS },
         asr: { type: 'string', enum: ['auto', 'shafii', 'hanafi'] },
+        offset_minutes: OFFSET_PROP,
       },
     },
   },
@@ -126,6 +145,27 @@ export const TOOLS = [
     },
   },
   {
+    name: 'get_tasbeeh',
+    annotations: { title: 'Tasbeeh and dhikr', readOnlyHint: true, openWorldHint: false },
+    description:
+      'Look up the dhikr phrases in the Wasilah tasbeeh counter: Arabic, transliteration, English and Bengali meaning, and the customary count. Give a phrase to look one up, or omit it for all six.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        dhikr: {
+          type: 'string',
+          description:
+            'Phrase to look up, by transliteration, meaning or Arabic, e.g. "SubhanAllah", "forgiveness" or "أستغفر".',
+        },
+        language: {
+          type: 'string',
+          enum: ['en', 'bn'],
+          description: 'Language for meanings and notes. Defaults to en.',
+        },
+      },
+    },
+  },
+  {
     name: 'get_quran_audio',
     annotations: { title: 'Quran audio', readOnlyHint: true, openWorldHint: false },
     description:
@@ -183,17 +223,83 @@ function parseDate(str) {
 
 async function resolveLocation(args) {
   if (args.latitude != null && args.longitude != null) {
-    return {
+    const latitude = Number(args.latitude);
+    const longitude = Number(args.longitude);
+    const loc = {
       name: args.label || 'the given coordinates',
       country: '',
-      latitude: Number(args.latitude),
-      longitude: Number(args.longitude),
+      latitude,
+      longitude,
       timezone: args.timezone || 'UTC',
-      tzAssumed: !args.timezone,
+      tzAssumed: false,
+      tzInferredFrom: null,
     };
+    if (!args.timezone) {
+      // Returning UTC here is the worst possible answer: Dhaka comes back six
+      // hours wrong and reads as a real time. Infer the zone from the nearest
+      // bundled city and say where it came from.
+      const near = nearestCity(latitude, longitude);
+      if (near && near.distanceKm <= TZ_INFERENCE_LIMIT_KM) {
+        loc.timezone = near.timezone;
+        loc.tzInferredFrom = near;
+      } else {
+        loc.tzAssumed = true;
+      }
+    }
+    return loc;
   }
   if (args.city) return geocodeCity(args.city);
   throw new Error('Provide a `city`, or `latitude` and `longitude` (with optional `timezone`).');
+}
+
+// Per-prayer user offsets, mirroring `_applyOffsets` in the app
+// (lib/features/prayer_times/providers.dart). Sunrise is reference-only and is
+// never shifted, matching `offsetMinFor`, which returns 0 for it.
+const OFFSET_KEYS = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
+
+function parseOffsets(args) {
+  const raw = args.offset_minutes;
+  if (raw == null) return null;
+  if (typeof raw !== 'object' || Array.isArray(raw)) {
+    throw new Error('`offset_minutes` must be an object such as {"maghrib": 3, "fajr": -2}.');
+  }
+  const offsets = {};
+  for (const [key, value] of Object.entries(raw)) {
+    const k = String(key).toLowerCase();
+    if (!OFFSET_KEYS.includes(k)) {
+      throw new Error(
+        `\`offset_minutes\` key "${key}" is not adjustable. Use one of ${OFFSET_KEYS.join(', ')}. Sunrise is reference-only and is never offset.`
+      );
+    }
+    const n = Number(value);
+    if (!Number.isInteger(n)) throw new Error(`\`offset_minutes.${k}\` must be a whole number of minutes.`);
+    if (Math.abs(n) > 60) throw new Error(`\`offset_minutes.${k}\` is ${n}. Offsets beyond an hour are rejected as a typo guard.`);
+    if (n !== 0) offsets[k] = n;
+  }
+  return Object.keys(offsets).length ? offsets : null;
+}
+
+// Shift the computed clocks in place of the caller. Returns a new entry list so
+// the astronomy result stays the untouched reference.
+function applyOffsets(entries, offsets) {
+  if (!offsets) return entries;
+  return entries.map((e) => {
+    const off = e.isPrayer ? offsets[e.key] || 0 : 0;
+    if (off === 0 || !e.clock) return e;
+    let minutes = (e.clock.minutesOfDay + off) % 1440;
+    if (minutes < 0) minutes += 1440;
+    const hh = Math.floor(minutes / 60);
+    const mm = minutes % 60;
+    return { ...e, clock: { hh, mm, minutesOfDay: minutes }, offsetApplied: off };
+  });
+}
+
+function offsetsNote(offsets) {
+  if (!offsets) return '';
+  const parts = OFFSET_KEYS.filter((k) => offsets[k]).map(
+    (k) => `${k} ${offsets[k] > 0 ? '+' : ''}${offsets[k]} min`
+  );
+  return `\nYour offsets applied: ${parts.join(', ')}. These are your own adjustments on top of the computed times, not a different calculation method. Sunrise is never offset.`;
 }
 
 function placeLabel(loc) {
@@ -227,28 +333,40 @@ async function callPrayerTimes(args) {
     timezone: loc.timezone,
   });
 
+  const offsets = parseOffsets(args);
+  const entries = applyOffsets(result.entries, offsets);
+
   const isFriday = weekdayFor(loc.timezone, date.year, date.month, date.day) === 'Friday';
   const dateStr = `${date.year}-${String(date.month).padStart(2, '0')}-${String(date.day).padStart(2, '0')}`;
 
-  const lines = result.entries.map((e) => {
+  const lines = entries.map((e) => {
     let label = e.name;
     if (e.key === 'dhuhr' && isFriday) label = "Jumu'ah (Dhuhr)";
     const tag = e.isPrayer ? '' : '  [not a prayer]';
-    return `  ${label.padEnd(16)} ${formatClock(e.clock)}${tag}`;
+    const off = e.offsetApplied ? `  [${e.offsetApplied > 0 ? '+' : ''}${e.offsetApplied} min]` : '';
+    return `  ${label.padEnd(16)} ${formatClock(e.clock)}${tag}${off}`;
   });
 
   const header = `Prayer times for ${placeLabel(loc) || loc.name} on ${dateStr}`;
   const meta = `Method: ${result.methodLabel} · Asr: ${result.asrLabel} · Timezone: ${loc.timezone} (UTC${result.tzOffsetHours >= 0 ? '+' : ''}${result.tzOffsetHours})`;
-  const tzWarning = loc.tzAssumed ? TZ_WARNING : '';
   const fridayNote = isFriday
     ? '\nFriday: the congregation prays Jumu’ah in place of Dhuhr.'
     : '';
 
-  return `${header}\n${meta}${tzWarning}\n\n${lines.join('\n')}${fridayNote}`;
+  return `${header}\n${meta}${tzNote(loc)}\n\n${lines.join('\n')}${fridayNote}${offsetsNote(offsets)}`;
 }
 
 const TZ_WARNING =
-  '\n\nWARNING: no `timezone` was given with these coordinates, so times are UTC and are almost certainly wrong for this location. Pass an IANA zone such as Asia/Dhaka.';
+  '\n\nWARNING: no `timezone` was given with these coordinates and no known city is close enough to infer one, so times are UTC and are almost certainly wrong for this location. Pass an IANA zone such as Asia/Dhaka.';
+
+// Say where an inferred zone came from. Silent inference would be its own trap:
+// the caller could not tell a supplied zone from a guessed one.
+function tzNote(loc) {
+  if (loc.tzAssumed) return TZ_WARNING;
+  if (!loc.tzInferredFrom) return '';
+  const c = loc.tzInferredFrom;
+  return `\nNo timezone was given, so ${loc.timezone} was inferred from the nearest known city (${c.name}, ${c.country}, about ${c.distanceKm} km away). Pass \`timezone\` explicitly if that is wrong.`;
+}
 
 async function callNextPrayer(args) {
   const loc = await resolveLocation(args);
@@ -265,7 +383,8 @@ async function callNextPrayer(args) {
     timezone: loc.timezone,
   });
 
-  const prayers = today.entries.filter((e) => e.isPrayer && e.clock);
+  const offsets = parseOffsets(args);
+  const prayers = applyOffsets(today.entries, offsets).filter((e) => e.isPrayer && e.clock);
   let next = prayers.find((e) => e.clock.minutesOfDay > now.minutesOfDay);
   let until;
 
@@ -283,11 +402,11 @@ async function callNextPrayer(args) {
       asr: args.asr === 'auto' ? undefined : args.asr,
       timezone: loc.timezone,
     });
-    next = t.entries.find((e) => e.key === 'fajr');
+    next = applyOffsets(t.entries, offsets).find((e) => e.key === 'fajr');
     until = 1440 - now.minutesOfDay + next.clock.minutesOfDay;
   }
 
-  return `Next prayer in ${placeLabel(loc) || loc.name}: ${next.name} at ${formatClock(next.clock)}, in ${minutesToText(until)} (method ${today.methodLabel}).${loc.tzAssumed ? TZ_WARNING : ''}`;
+  return `Next prayer in ${placeLabel(loc) || loc.name}: ${next.name} at ${formatClock(next.clock)}, in ${minutesToText(until)} (method ${today.methodLabel}).${tzNote(loc)}${offsetsNote(offsets)}`;
 }
 
 async function callQibla(args) {
@@ -439,6 +558,17 @@ function callAsmaUlHusna(args) {
   return 'The 99 Names of Allah (Asma ul Husna):\n\n' + ASMA_UL_HUSNA.map(renderName).join('\n\n');
 }
 
+function callTasbeeh(args) {
+  const lang = args.language === 'bn' ? 'bn' : 'en';
+  const items = tasbeehLookup(args.dhikr);
+  const header = args.dhikr
+    ? `${items.length} dhikr matching "${args.dhikr}":`
+    : lang === 'bn'
+      ? 'ওয়াসিলাহ তাসবিহ কাউন্টারের জিকিরগুলো:'
+      : 'The dhikr in the Wasilah tasbeeh counter:';
+  return `${header}\n\n${renderTasbeeh(items, lang)}`;
+}
+
 export async function callTool(name, args = {}) {
   switch (name) {
     case 'get_prayer_times':
@@ -457,6 +587,8 @@ export async function callTool(name, args = {}) {
       return callHijriCalendar(args);
     case 'get_asma_ul_husna':
       return callAsmaUlHusna(args);
+    case 'get_tasbeeh':
+      return callTasbeeh(args);
     default:
       throw new Error(`Unknown tool: ${name}`);
   }
