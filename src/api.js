@@ -5,7 +5,7 @@ import { computePrayerTimes, METHOD_LABELS } from './prayer.js';
 import { qiblaBearing } from './qibla.js';
 import { hijriDate } from './hijri.js';
 import { quranAudio, RECITERS, DEFAULT_RECITER } from './quran.js';
-import { geocodeCity } from './geocode.js';
+import { geocodeCity, nearestCity, TZ_INFERENCE_LIMIT_KM } from './geocode.js';
 import { locationFromRequest, isAuto } from './geo.js';
 
 const CORS = {
@@ -62,14 +62,30 @@ async function resolveLocation(q, request) {
   const lat = q.get('latitude') ?? q.get('lat');
   const lon = q.get('longitude') ?? q.get('lon');
   if (lat != null && lon != null) {
-    return {
+    const latitude = Number(lat);
+    const longitude = Number(lon);
+    const given = q.get('timezone') || q.get('tz');
+    const loc = {
       name: q.get('label') || 'the given coordinates',
       country: '',
-      latitude: Number(lat),
-      longitude: Number(lon),
-      timezone: q.get('timezone') || q.get('tz') || 'UTC',
-      tzAssumed: !(q.get('timezone') || q.get('tz')),
+      latitude,
+      longitude,
+      timezone: given || 'UTC',
+      tzAssumed: false,
+      tzInferredFrom: null,
     };
+    if (!given) {
+      // Same inference the MCP tools use: UTC is the one answer that is both
+      // wrong and plausible-looking, so infer from the nearest bundled city.
+      const near = nearestCity(latitude, longitude);
+      if (near && near.distanceKm <= TZ_INFERENCE_LIMIT_KM) {
+        loc.timezone = near.timezone;
+        loc.tzInferredFrom = near;
+      } else {
+        loc.tzAssumed = true;
+      }
+    }
+    return loc;
   }
   const city = q.get('city');
   if (isAuto(city)) {
@@ -83,6 +99,25 @@ async function resolveLocation(q, request) {
   const err = new Error('Provide `city`, `city=auto`, or `latitude` and `longitude` (with optional `timezone`).');
   err.status = 400;
   throw err;
+}
+
+function tzFields(loc) {
+  if (loc.tzAssumed) {
+    return {
+      warning:
+        'No `timezone` was supplied with these coordinates and no known city is close enough to infer one. Times are UTC and are almost certainly wrong for this location. Pass an IANA zone such as Asia/Dhaka.',
+    };
+  }
+  if (!loc.tzInferredFrom) return {};
+  const c = loc.tzInferredFrom;
+  return {
+    timezoneInferred: {
+      timezone: loc.timezone,
+      from: `${c.name}, ${c.country}`,
+      distanceKm: c.distanceKm,
+      note: 'No `timezone` was supplied, so it was inferred from the nearest known city. Pass `timezone` explicitly if that is wrong.',
+    },
+  };
 }
 
 function parseDate(s) {
@@ -182,7 +217,7 @@ async function handleApiInner(url, request) {
       const pt = prayerTimes(loc, q);
       return json({
         attribution: GEONAMES_ATTRIBUTION,
-        ...(loc.tzAssumed ? { warning: 'No `timezone` was supplied with these coordinates. Times are UTC and are almost certainly wrong for this location. Pass an IANA zone such as Asia/Dhaka.' } : {}),
+        ...tzFields(loc),
         location: { name: loc.name, country: loc.country, latitude: loc.latitude, longitude: loc.longitude, timezone: loc.timezone },
         date: pt.date,
         method: pt.method,
@@ -219,7 +254,7 @@ async function handleApiInner(url, request) {
       }
       return json({
         attribution: GEONAMES_ATTRIBUTION,
-        ...(loc.tzAssumed ? { warning: 'No `timezone` was supplied with these coordinates. Times are UTC and are almost certainly wrong for this location. Pass an IANA zone such as Asia/Dhaka.' } : {}),
+        ...tzFields(loc),
         location: { name: loc.name, country: loc.country, timezone: loc.timezone },
         next: next.name,
         time: hhmm(next.clock),
@@ -233,7 +268,7 @@ async function handleApiInner(url, request) {
       const { bearing, compass } = qiblaBearing(loc.latitude, loc.longitude);
       return json({
         attribution: GEONAMES_ATTRIBUTION,
-        ...(loc.tzAssumed ? { warning: 'No `timezone` was supplied with these coordinates. Times are UTC and are almost certainly wrong for this location. Pass an IANA zone such as Asia/Dhaka.' } : {}),
+        ...tzFields(loc),
         location: { name: loc.name, country: loc.country, latitude: loc.latitude, longitude: loc.longitude },
         bearing,
         compass,

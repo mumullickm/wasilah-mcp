@@ -31,6 +31,42 @@ function record(i) {
   };
 }
 
+// Nearest bundled city to a coordinate pair, by great-circle distance.
+//
+// The app falls back to a hard-coded Bangladesh bounding box when the device
+// reports UTC (lib/features/prayer_times/providers.dart `_ianaTimezoneFromCoords`).
+// Here the same city database that answers `city` lookups is already in memory,
+// so the connector can resolve a zone anywhere in the world instead, still with
+// no outbound call. Returns the city plus the distance so a caller can judge
+// how much to trust an inferred zone.
+export function nearestCity(latitude, longitude) {
+  const R = 6371;
+  const toRad = (d) => (d * Math.PI) / 180;
+  const lat1 = toRad(latitude);
+  const cosLat1 = Math.cos(lat1);
+  let bestIdx = -1;
+  let bestKm = Infinity;
+  for (let i = 0; i < cities.length; i++) {
+    const dLat = toRad(cities[i][1] - latitude);
+    const dLon = toRad(cities[i][2] - longitude);
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      cosLat1 * Math.cos(toRad(cities[i][1])) * Math.sin(dLon / 2) ** 2;
+    const km = 2 * R * Math.asin(Math.min(1, Math.sqrt(a)));
+    if (km < bestKm) {
+      bestKm = km;
+      bestIdx = i;
+    }
+  }
+  if (bestIdx === -1) return null;
+  return { ...record(bestIdx), distanceKm: Math.round(bestKm) };
+}
+
+// How far the nearest bundled city may be before an inferred zone stops being
+// trustworthy. Zones are wide, so this is generous; beyond it we say so rather
+// than assert a zone.
+export const TZ_INFERENCE_LIMIT_KM = 500;
+
 export function geocodeCity(query) {
   buildIndex();
   const q = fold(query);
