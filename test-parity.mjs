@@ -61,9 +61,13 @@ await test('unknown timezone fails cleanly and names the offending zone', async 
   assert.doesNotMatch(text, /\bat .*\.js:\d+/, 'a stack trace leaked to the caller');
 });
 
-await test('coordinates without a timezone warn loudly instead of silently returning UTC', async () => {
-  const r = await call('get_prayer_times', { latitude: 23.8103, longitude: 90.4125 });
-  assert.match(r.content[0].text, /WARNING/, 'a silent 6-hour error is the worst failure mode here');
+// Was: assert a WARNING. The warning was a mitigation for returning UTC; 1.4.0
+// removes the cause instead, so the guard now pins the times themselves.
+await test('coordinates without a timezone are resolved, not returned as UTC', async () => {
+  const r = await call('get_prayer_times', { latitude: 23.8103, longitude: 90.4125, date: '2026-07-30' });
+  const t = r.content[0].text;
+  assert.match(t, /Asia\/Dhaka/, 'a silent 6-hour error is the worst failure mode here');
+  assert.doesNotMatch(t, /UTC\+0\)/, 'UTC for Dhaka coordinates is the defect this replaced');
 });
 
 await test('coordinates with a timezone do not warn', async () => {
@@ -83,9 +87,9 @@ await test('serverInfo version matches server.json and the MCP registry', async 
   assert.equal(live, declared, `registry says ${declared}, server reports ${live}`);
 });
 
-await test('get_next_prayer also warns on coordinates without a timezone', async () => {
+await test('get_next_prayer resolves bare coordinates the same way', async () => {
   const r = await call('get_next_prayer', { latitude: 23.8103, longitude: 90.4125 });
-  assert.match(r.content[0].text, /WARNING/, 'a wrong countdown is worse than a wrong table');
+  assert.match(r.content[0].text, /Asia\/Dhaka/, 'a wrong countdown is worse than a wrong table');
 });
 
 console.log('\nBangladesh coverage (the IFB dataset is district-keyed, so every district must resolve)');
@@ -190,6 +194,81 @@ await test('every response carries the northern-Asr and margin caveats', async (
   const t = (await call('get_ifb_district_offset', { district: 'Panchagarh' })).content[0].text;
   assert.match(t, /Asr offset may need to be LARGER/);
   assert.match(t, /IFB is correct/);
+});
+
+console.log('\nTimezone inference for bare coordinates');
+
+await test('Dhaka coordinates without a timezone are no longer six hours wrong', async () => {
+  const withTz = (await call('get_prayer_times', { ...DHAKA, date: '2026-07-30' })).content[0].text;
+  const without = (await call('get_prayer_times', {
+    latitude: DHAKA.latitude, longitude: DHAKA.longitude, date: '2026-07-30',
+  })).content[0].text;
+  const times = (t) => t.match(/\d{2}:\d{2}/g).join(',');
+  assert.equal(times(without), times(withTz), 'inferred zone must reproduce the explicit one');
+  assert.match(without, /Asia\/Dhaka was inferred|inferred from the nearest known city/);
+});
+
+await test('an inferred zone is always disclosed, never silent', async () => {
+  const t = (await call('get_prayer_times', { latitude: 51.5074, longitude: -0.1278 })).content[0].text;
+  assert.match(t, /No timezone was given/, 'the caller must be able to tell inferred from supplied');
+  assert.match(t, /Europe\/London/);
+});
+
+await test('mid-ocean coordinates still warn rather than assert a zone', async () => {
+  const t = (await call('get_prayer_times', { latitude: -35, longitude: -140 })).content[0].text;
+  assert.match(t, /WARNING/, 'no city is close enough to infer from');
+});
+
+console.log('\nUser offset minutes (parity with the app _applyOffsets)');
+
+await test('offsets shift only the named prayer', async () => {
+  const base = (await call('get_prayer_times', { ...DHAKA, date: '2026-07-30' })).content[0].text;
+  const off = (await call('get_prayer_times', {
+    ...DHAKA, date: '2026-07-30', offset_minutes: { maghrib: 3 },
+  })).content[0].text;
+  const maghrib = (t) => /Maghrib\s+(\d{2}:\d{2})/.exec(t)[1];
+  const fajr = (t) => /Fajr\s+(\d{2}:\d{2})/.exec(t)[1];
+  const [bh, bm] = maghrib(base).split(':').map(Number);
+  const [oh, om] = maghrib(off).split(':').map(Number);
+  assert.equal(oh * 60 + om - (bh * 60 + bm), 3, 'Maghrib must move by exactly 3 minutes');
+  assert.equal(fajr(off), fajr(base), 'an unnamed prayer must not move');
+});
+
+await test('Sunrise is never offset, matching offsetMinFor', async () => {
+  const base = (await call('get_prayer_times', { ...DHAKA, date: '2026-07-30' })).content[0].text;
+  const sunrise = (t) => /Sunrise\s+(\d{2}:\d{2})/.exec(t)[1];
+  const off = (await call('get_prayer_times', {
+    ...DHAKA, date: '2026-07-30', offset_minutes: { fajr: 10 },
+  })).content[0].text;
+  assert.equal(sunrise(off), sunrise(base));
+  const rejected = await call('get_prayer_times', { ...DHAKA, offset_minutes: { sunrise: 5 } });
+  assert.match(JSON.stringify(rejected), /reference-only/, 'offsetting sunrise must be refused');
+});
+
+await test('applied offsets are stated, not folded in silently', async () => {
+  const t = (await call('get_prayer_times', {
+    ...DHAKA, date: '2026-07-30', offset_minutes: { isha: -5 },
+  })).content[0].text;
+  assert.match(t, /Your offsets applied/);
+  assert.match(t, /isha -5 min/);
+});
+
+console.log('\nTasbeeh');
+
+await test('every dhikr carries both an English and a Bengali meaning', async () => {
+  const t = (await call('get_tasbeeh', {})).content[0].text;
+  for (const phrase of ['SubhanAllah', 'Alhamdulillah', 'Allahu Akbar', 'La ilaha illa Allah',
+                        'Astaghfirullah', 'Salawat']) {
+    assert.match(t, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), `${phrase} missing`);
+  }
+  const bn = (await call('get_tasbeeh', { language: 'bn' })).content[0].text;
+  assert.match(bn, /\u0986\u09b2\u09cd\u09b2\u09be\u09b9/, 'Bengali meanings missing');
+});
+
+await test('counts are presented as customary, and rulings are deferred', async () => {
+  const t = (await call('get_tasbeeh', {})).content[0].text;
+  assert.match(t, /not a condition/, 'a count must not read as obligatory');
+  assert.match(t, /qualified scholar/, 'ruling questions must be deferred');
 });
 
 console.log('\nAttribution (CC BY 4.0 compliance for the bundled GeoNames data)');
