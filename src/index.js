@@ -204,6 +204,33 @@ const TERMS = [
   'Questions: mumullickm@gmail.com. The Wasilah app terms are at <a href="https://wasilah.site/terms/">wasilah.site/terms</a>.',
 ];
 
+// Meta's Data Deletion Callback for the Wasilah app (1375079551122238).
+// Wasilah stores no Facebook or Instagram user data on any server, so there
+// is nothing to erase: Meta only needs a status URL and a confirmation code.
+async function handleMetaDataDeletion(request) {
+  let userId = '';
+  try {
+    const form = await request.formData();
+    const payload = String(form.get('signed_request') || '').split('.')[1] || '';
+    const b64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    userId = String(JSON.parse(atob(b64)).user_id || '');
+  } catch {
+    return json({ error: 'invalid signed_request' }, 400);
+  }
+  const digest = await crypto.subtle.digest(
+    'SHA-256',
+    new TextEncoder().encode(`${userId}:${Date.now()}`)
+  );
+  const code = [...new Uint8Array(digest)]
+    .slice(0, 6)
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+  return json({
+    url: `https://wasilah.site/delete-data/?code=${code}`,
+    confirmation_code: code,
+  });
+}
+
 export default {
   async fetch(request) {
     const url = new URL(request.url);
@@ -279,6 +306,10 @@ export default {
           ...CORS,
         },
       });
+    }
+
+    if (url.pathname === '/meta/data-deletion' && request.method === 'POST') {
+      return handleMetaDataDeletion(request);
     }
 
     if (url.pathname === '/health') {
