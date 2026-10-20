@@ -1,5 +1,7 @@
 # Wasilah MCP
 
+[![Wasilah MCP server](https://mcprush.com/badge/wasilah-mcp/card.svg)](https://mcprush.com/to/wasilah-mcp?ref=badge)
+
 A remote [Model Context Protocol](https://modelcontextprotocol.io) server that exposes Wasilah's Islamic reference data to Claude as a custom connector. Add the URL in Claude and it can answer prayer-time, Qibla, Hijri-date, and Quran-audio questions directly.
 
 Prayer times are computed with the **same astronomy engine as the Wasilah app** (ported from `lib/features/prayer_times/prayer_astronomy.dart`), so the connector and the app agree to the minute for the same location, date, method, and madhab.
