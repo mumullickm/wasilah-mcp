@@ -14,9 +14,13 @@ Prayer times are computed with the **same astronomy engine as the Wasilah app** 
 | `get_next_prayer` | The next upcoming prayer and time remaining. |
 | `get_qibla` | Compass bearing to the Kaaba. |
 | `get_hijri_date` | Islamic date for a given Gregorian date (Umm al-Qura, with a tabular fallback). |
+| `get_hijri_calendar` | A full Hijri month mapped to Gregorian dates, with the significant days in it. |
 | `get_quran_audio` | A streaming full-surah recitation URL plus surah name and ayah count. |
+| `get_asma_ul_husna` | The 99 Names of Allah in Arabic, transliteration, English and Bengali. |
+| `get_ifb_district_offset` | Islamic Foundation Bangladesh's published sehri and iftar offset from Dhaka for any of the 64 districts. |
+| `get_tasbeeh` | The six dhikr phrases from the Wasilah tasbeeh counter, with meaning and customary count. |
 
-Every location tool accepts either a `city` name (resolved against a bundled offline database) or explicit `latitude` + `longitude` + `timezone`. Prayer tools also accept `method` (Karachi, ISNA, MWL, Umm al-Qura, and others) and `asr` (`auto`, `shafii`, `hanafi`). The connector makes no external network calls.
+Every location tool accepts either a `city` name (resolved against a bundled offline database) or explicit `latitude` + `longitude` (with an optional `timezone`; if omitted, the zone is inferred from the nearest known city and the answer says so). Prayer tools also accept `method` (Karachi, ISNA, MWL, Umm al-Qura, and others) and `asr` (`auto`, `shafii`, `hanafi`). The connector makes no external network calls.
 
 ## Run locally
 

@@ -11,7 +11,7 @@
     "test:parity": "node test-parity.mjs"
   },
   "devDependencies": {
-    "wrangler": "^4.115.0"
+    "wrangler": "^4.151.3"
   },
   "license": "MIT",
   "author": "Miraz Mullick"
